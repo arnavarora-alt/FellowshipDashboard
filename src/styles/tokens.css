@@ -1,0 +1,93 @@
+/* Fonts: latin subsets only (keeps the single-file build small) */
+@font-face {
+  font-family: 'Archivo Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  src: url('@fontsource-variable/archivo/files/archivo-latin-wdth-normal.woff2') format('woff2-variations');
+}
+@font-face {
+  font-family: 'Inter Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('@fontsource-variable/inter/files/inter-latin-wght-normal.woff2') format('woff2-variations');
+}
+
+:root {
+  /* ---- Palette: only the colours used in the Playbook + Operator Guide PDFs ---- */
+  --ink: #121a17;
+  --ink-3: #2e3532;
+  --white: #ffffff;
+  --yellow: #ffd12f;
+  --orange: #ff5a00;
+  --purple: #4d298e;
+  --green: #085939;
+  --lilac: #f1ecfa;
+  --peach: #ffede2;
+  --butter: #fff5cc;
+  --mint: #e6f2ec;
+  --grey: #8a8a8a;
+  --grey-2: #a0a8a6;
+
+  /* ---- Surfaces (derived from the palette, never new hues) ---- */
+  --bg: var(--ink);
+  --surface: color-mix(in srgb, var(--white) 5%, var(--ink));
+  --surface-2: color-mix(in srgb, var(--white) 9%, var(--ink));
+  --line: color-mix(in srgb, var(--white) 12%, transparent);
+  --line-strong: color-mix(in srgb, var(--white) 24%, transparent);
+  --text: var(--white);
+  --text-dim: var(--grey-2);
+
+  /* ---- Role accent (overridden per role in [data-role]) ---- */
+  --accent: var(--yellow);
+  --on-accent: var(--ink);
+  --accent-text: var(--yellow);
+  --accent-soft: color-mix(in srgb, var(--accent) 16%, transparent);
+
+  /* ---- Type ---- */
+  --f-display: 'Archivo Variable', 'Arial Narrow', Impact, sans-serif;
+  --f-body: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* ---- Motion (Emil Kowalski curves) ---- */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+  --radius: 16px;
+  --radius-sm: 10px;
+  --rail: 272px;
+  --top: 68px;
+}
+
+[data-role='fellow'] {
+  --accent: var(--yellow);
+  --on-accent: var(--ink);
+  --accent-text: var(--yellow);
+}
+[data-role='hoc'] {
+  --accent: var(--purple);
+  --on-accent: var(--white);
+  --accent-text: var(--lilac);
+}
+[data-role='hoo'] {
+  --accent: var(--orange);
+  --on-accent: var(--ink);
+  --accent-text: var(--orange);
+}
+[data-role='core'] {
+  --accent: var(--green);
+  --on-accent: var(--white);
+  --accent-text: var(--mint);
+}
+[data-role='community'] {
+  --accent: var(--butter);
+  --on-accent: var(--ink);
+  --accent-text: var(--butter);
+}
+[data-role='admin'] {
+  --accent: var(--white);
+  --on-accent: var(--ink);
+  --accent-text: var(--white);
+}

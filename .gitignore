@@ -1,0 +1,9 @@
+node_modules
+dist
+dist-single
+.DS_Store
+*.log
+# local AI-skill installs (design / token-saving skills used while building)
+.claude/
+.agents/
+skills-lock.json

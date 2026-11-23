@@ -1,0 +1,13 @@
+/* page-level refinements */
+.card-click:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 3px; }
+.card.tilt h3 { overflow-wrap: anywhere; }
+.page-head > div { min-width: 0; }
+code { font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace; font-size: 13px; }
+details > summary { cursor: pointer; }
+@media (max-width: 720px) {
+  .page-head { align-items: flex-start; }
+  .page-head .ph-art { display: none; }
+  .section-title h2 { font-size: 24px; }
+  .modal { padding: 18px; }
+}
+@media print { .rail, .top, .toasts { display: none !important; } .main { margin: 0; } }

@@ -1,0 +1,51 @@
+/* Valorant-style first-login entry: agent select -> lock in -> mission briefing */
+.intro { position: fixed; inset: 0; z-index: 200; background: var(--ink); color: var(--white); overflow: hidden; display: flex; flex-direction: column; }
+.intro::before { content: ''; position: absolute; inset: 0; background: radial-gradient(800px 600px at 72% 45%, color-mix(in srgb, var(--accent) 55%, transparent), transparent 70%); }
+.intro-slash { position: absolute; top: -10%; bottom: -10%; width: 22vw; background: var(--accent); opacity: 0.16; transform: skewX(-18deg); }
+.intro-top { position: relative; z-index: 3; display: flex; justify-content: space-between; align-items: center; padding: 22px 32px; }
+.intro-top .tagline { font: 700 13px var(--f-body); color: var(--grey-2); }
+.intro-stage { position: relative; z-index: 2; flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; padding: 0 clamp(20px, 5vw, 72px); gap: 24px; perspective: 1400px; min-height: 0; }
+.agent-name { position: absolute; left: 50%; top: 50%; translate: -50% -52%; font: 900 clamp(120px, 26vw, 400px)/0.8 var(--f-display); font-stretch: 62%; text-transform: uppercase; color: transparent; -webkit-text-stroke: 2px color-mix(in srgb, var(--white) 22%, transparent); white-space: nowrap; pointer-events: none; z-index: 0; }
+.agent-info { position: relative; z-index: 3; display: flex; flex-direction: column; gap: 18px; }
+.agent-info .role-label { font: 700 14px var(--f-body); color: var(--accent-text); }
+.agent-info h1 { font-size: clamp(60px, 9vw, 132px); font-weight: 900; font-stretch: 62%; text-transform: uppercase; line-height: 0.84; }
+.agent-info p.lead { max-width: 44ch; font-size: 17px; color: var(--grey-2); }
+.abilities { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; max-width: 560px; }
+.ability { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--white) 7%, transparent); border: 1px solid var(--line); font-size: 13px; font-weight: 600; }
+.ability svg { color: var(--accent-text); flex: none; }
+.agent-art { position: relative; z-index: 2; display: grid; place-items: center; transform-style: preserve-3d; height: 100%; min-height: 280px; }
+.agent-art img.mascot { width: min(440px, 80%); filter: drop-shadow(0 40px 40px rgba(0, 0, 0, 0.5)); transform: translateZ(90px); }
+.agent-art img.sk { position: absolute; width: clamp(60px, 9vw, 120px); }
+.lock-wrap { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.lock { position: relative; overflow: hidden; min-height: 60px; padding: 0 44px 0 30px; display: inline-flex; align-items: center; gap: 12px; font: 900 20px var(--f-display); font-stretch: 75%; text-transform: uppercase; background: var(--surface-2); color: var(--white); clip-path: polygon(0 0, 100% 0, calc(100% - 16px) 100%, 0 100%); transition: transform 160ms var(--ease-out); user-select: none; touch-action: none; }
+.lock:active { transform: scale(0.97); }
+.lock .fill { position: absolute; inset: 0; background: var(--accent); clip-path: inset(0 100% 0 0); transition: clip-path 200ms var(--ease-out); }
+.lock[data-holding='true'] .fill { clip-path: inset(0 0 0 0); transition: clip-path 1100ms linear; }
+.lock span { position: relative; mix-blend-mode: normal; }
+.lock[data-holding='true'] span { color: var(--on-accent); }
+.skip { font-size: 13px; font-weight: 600; color: var(--grey-2); text-decoration: underline; text-underline-offset: 3px; }
+.flash { position: absolute; inset: 0; z-index: 10; background: var(--accent); pointer-events: none; }
+.wipe { position: absolute; inset: 0; z-index: 11; display: flex; pointer-events: none; }
+.wipe i { flex: 1; background: var(--accent); transform: skewX(-18deg) scaleY(1); transform-origin: bottom; margin: 0 -14px; }
+
+.brief { position: relative; z-index: 3; flex: 1; overflow-y: auto; padding: 0 clamp(20px, 5vw, 72px) 40px; display: flex; flex-direction: column; gap: 22px; perspective: 1400px; }
+.brief h1 { font-size: clamp(48px, 8vw, 110px); font-weight: 900; font-stretch: 62%; text-transform: uppercase; line-height: 0.86; }
+.loadout { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); }
+.mission { position: relative; display: flex; flex-direction: column; gap: 12px; text-align: left; padding: 22px; min-height: 230px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line-strong); overflow: hidden; transform-style: preserve-3d; transition: border-color 160ms var(--ease-out); }
+.mission::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 6px; background: var(--accent); }
+.mission .n { font: 900 54px/1 var(--f-display); font-stretch: 62%; color: color-mix(in srgb, var(--white) 14%, transparent); position: absolute; right: 16px; top: 12px; }
+.mission .ico { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; background: var(--accent); color: var(--on-accent); }
+.mission h3 { font-size: 26px; font-stretch: 70%; text-transform: uppercase; font-weight: 900; }
+.mission p { color: var(--grey-2); font-size: 14px; }
+.mission .go { margin-top: auto; display: inline-flex; gap: 8px; align-items: center; font-weight: 700; color: var(--accent-text); }
+@media (hover: hover) and (pointer: fine) { .mission:hover { border-color: var(--accent-text); } }
+.brief-foot { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.agent-info { min-width: 0; }
+.abilities { grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); }
+@media (max-width: 860px) {
+  .agent-name { display: none; }
+  .intro-stage { grid-template-columns: minmax(0, 1fr); align-content: center; overflow-y: auto; padding-bottom: 24px; }
+  .agent-art { order: -1; min-height: 190px; height: 190px; }
+  .agent-art img.mascot { width: 170px; }
+  .intro-top { padding: 16px 20px; }
+}
