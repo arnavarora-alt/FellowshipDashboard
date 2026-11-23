@@ -19,7 +19,7 @@ export const toCSV = (rows, cols) => {
   return [cols.map((c) => esc(c.label)).join(','), ...rows.map((r) => cols.map((c) => esc(r[c.key])).join(','))].join('\n');
 };
 export const download = (name, text, type = 'text/csv') => {
-  const url = URL.createObjectURL(new Blob([text], { type }));
+  const url = URL.createObjectURL(new Blob([type === 'text/csv' ? `﻿${text}` : text], { type }));
   const a = document.createElement('a');
   a.href = url;
   a.download = name;

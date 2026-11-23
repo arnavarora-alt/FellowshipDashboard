@@ -167,16 +167,29 @@ export function ContentGuide() {
 export function DraftRoom() {
   const { submit, state, user } = useApp();
   const next = EVENTS.find((e) => e.id === 'e2');
-  const wall = state.submissions.filter((s) => s.type === 'shoutout');
   const posts = state.submissions.filter((s) => s.type === 'draft' && s.userId === user.id);
   return (
     <>
-      <PageHead title="The Draft Room" sub="A weekly content workshop and appreciation platform. Bring real page content, get real feedback." art="ok-orange" />
+      <PageHead title="The Draft Room" sub="A weekly content workshop. Bring real page content, get real feedback." art="ok-orange" />
+      <div className="grid g2">
+        <EventCard e={next} />
+        <div className="card"><h3 style={{ marginBottom: 12 }}>Bring a post for feedback</h3>
+          <Form submitLabel="Add to this week’s queue" fields={[{ name: 'link', label: 'Link or caption', required: true, placeholder: 'https://instagram.com/…' }, { name: 'ask', label: 'What do you want feedback on?', type: 'textarea' }]} onSubmit={(v, reset) => { submit('draft', v, 'Added to the Draft Room queue.'); reset(); }} />
+          {posts.length > 0 && <p className="small dim" style={{ marginTop: 10 }}>{posts.length} in the queue from you.</p>}</div>
+      </div>
+    </>
+  );
+}
+
+export function WeeklyHang() {
+  const { submit, state } = useApp();
+  const next = EVENTS.find((e) => e.id === 'e1');
+  const wall = state.submissions.filter((s) => s.type === 'shoutout');
+  return (
+    <>
+      <PageHead title="Weekly Hang Session" sub="A weekly chill-out with all Fellows: games, a Fellow spotlight and 5MOP, five minutes to praise someone for something meaningful." art="shapes-yellow" />
       <div className="stack">
-        <div className="grid g2"><EventCard e={next} />
-          <div className="card"><h3 style={{ marginBottom: 12 }}>Bring a post for feedback</h3>
-            <Form submitLabel="Add to this week’s queue" fields={[{ name: 'link', label: 'Link or caption', required: true, placeholder: 'https://instagram.com/…' }, { name: 'ask', label: 'What do you want feedback on?', type: 'textarea' }]} onSubmit={(v, reset) => { submit('draft', v, 'Added to the Draft Room queue.'); reset(); }} />
-            {posts.length > 0 && <p className="small dim" style={{ marginTop: 10 }}>{posts.length} in the queue from you.</p>}</div></div>
+        <div style={{ maxWidth: 640 }}><EventCard e={next} /></div>
         <SectionTitle>Appreciation wall</SectionTitle>
         <div className="grid g2">
           <div className="card"><h3 style={{ marginBottom: 12 }}>Give a 5MOP shoutout</h3><Form submitLabel="Post shoutout" fields={[{ name: 'name', label: 'Who?', required: true }, { name: 'text', label: 'What did they do?', type: 'textarea', required: true }]} onSubmit={(v, reset) => { submit('shoutout', v, `Shoutout posted for ${v.name}.`); reset(); }} /></div>

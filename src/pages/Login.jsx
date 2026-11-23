@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from 'motion/react';
 import { ROLES, ROLE_ORDER, USERS } from '../data/roles';
 import { useApp } from '../store/AppState';
@@ -18,7 +18,7 @@ function Layer({ sx, sy, depth, className, src, rot = 0, tilt = 10 }) {
   );
 }
 
-function Scene() {
+export function Scene() {
   const reduce = useReducedMotion();
   const mx = useMotionValue(0);
   const my = useMotionValue(0);
@@ -66,8 +66,8 @@ export default function Login() {
         <div className="brand"><img src={logo} alt="Under25" /><b>Campus Fellowship</b></div>
         <Scene />
         <div>
-          <h1>One login.<br /><em>Six ways</em><br />in.</h1>
-          <p>Fellows, Heads, core team, community and the Under25 team all start here. Your ID decides what you see.</p>
+          <h1>Under25<br /><em>Community</em><br />Dashboard</h1>
+          <p>Your one stop destination for all things Under25 at your campus.</p>
         </div>
       </section>
 
@@ -92,12 +92,13 @@ export default function Login() {
             {error && <p className="err" role="alert">{error}</p>}
             <button ref={submitRef} className="btn" type="submit" style={{ background: 'var(--yellow)', color: 'var(--ink)' }}>Log in</button>
           </form>
+          <p className="signup-line">New to the community? <Link className="link" to="/signup">Sign up!</Link></p>
         </div>
 
         <div>
           <div className="accounts-head">
             <h3 className="display" style={{ fontSize: 28 }}>Demo accounts</h3>
-            <span className="note">Click a card to fill the form. Demo only, no real data.</span>
+            <span className="note">Click a card to fill the form. Demo only, no real data. <Link className="link" to="/mailbox">Demo mailbox</Link></span>
           </div>
           <div className="accounts">
             {sorted.map((u) => {

@@ -30,11 +30,13 @@ export const ROLES = {
     swatch: '#ffd12f',
     swatchText: '#121a17',
     sticker: 'trophy-yellow',
+    // what a Fellow runs (Playbook p.8 to p.13)
     abilities: [
-      ['Crown', 'Lead the campus club'],
-      ['CalendarPlus', 'List on-ground events'],
-      ['UsersRound', 'Build a 100-person team'],
-      ['Trophy', 'Chase the Campus Awards'],
+      ['Instagram', 'Club Page', 'Tell your campus story and grow a community.'],
+      ['Gamepad2', 'Sporting Leagues', 'You are the CEO. Run a tournament start to finish.'],
+      ['PartyPopper', 'On-ground Events', 'Build experiences for the people you see every day.'],
+      ['Mountain', 'Summit at Campus', 'Direct a real festival once a year.'],
+      ['Trophy', 'Campus Awards', 'Where the whole year comes full circle.'],
     ],
   },
   hoc: {
@@ -65,10 +67,10 @@ export const ROLES = {
     swatchText: '#121a17',
     sticker: 'ok-orange',
     abilities: [
-      ['ClipboardCheck', 'Run event checklists'],
-      ['Sparkles', 'Pitch event ideas'],
-      ['ShieldCheck', 'Enforce event guidelines'],
-      ['Users', 'Lead the ops team'],
+      ['Sparkles', 'Pitch event ideas', 'Easy to run, easy to show on camera.'],
+      ['CalendarRange', 'Run the event calendar', 'Plan around festivals and milestones.'],
+      ['CalendarPlus', 'List events', 'Get every event on the Under25 app.'],
+      ['Users', 'Lead the ops team', 'Finance, culture, marketing, brand, events.'],
     ],
   },
   core: {
@@ -137,12 +139,12 @@ export const BRIEFINGS = {
   ],
   hoo: [
     { icon: 'Sparkles', title: 'Event ideas', text: 'Formats that are easy to run on campus and easy to show on camera.', to: '/eventideas' },
-    { icon: 'ClipboardCheck', title: 'Event checklists', text: 'Before, day-of and after. Nothing slips an hour before doors open.', to: '/checklists' },
-    { icon: 'ShieldCheck', title: 'Event guidelines', text: 'Safety, conduct and the alcohol-free, smoke-free, drug-free promise.', to: '/eventguide' },
+    { icon: 'CalendarRange', title: 'Event calendar', text: 'Upcoming festivals and milestones, with an event to run around each one.', to: '/eventcal' },
+    { icon: 'CalendarPlus', title: 'List your event', text: 'Fill the listing form so your event can go live on the Under25 app.', to: '/listevent' },
   ],
   core: [
     { icon: 'Megaphone', title: 'What’s new', text: 'Community updates from Under25 and from your campus.', to: '/updates' },
-    { icon: 'MapPin', title: 'City meetup', text: 'The next Bengaluru meetup is open. Grab your spot.', to: '/citymeetups' },
+    { icon: 'MapPin', title: 'City meetup', text: 'The next Bengaluru meetup is open. Grab your spot.', to: '/events?type=City%20meetup' },
     { icon: 'Rocket', title: 'Your first task', text: 'Introduce yourself to the team and pick your first small win.', to: '/tasks?focus=t-core-first' },
   ],
   community: [

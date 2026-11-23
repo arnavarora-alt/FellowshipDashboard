@@ -1,19 +1,27 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { USERS } from '../data/roles';
-import { TASKS, APPLICATIONS, EVENTS } from '../data/mock';
+import { APPROVER_TEXT, canApprove } from '../lib/approvals';
+import { TASKS, APPLICATIONS, EVENTS, SEED_SIGNUPS, SEED_REPORTS, SEED_AGREEMENTS, SEED_CRED, SPOTLIGHT_SEED, PARTNERS } from '../data/mock';
 
-const KEY = 'u25.dashboard.v1';
+const KEY = 'u25.dashboard.v2';
 const fresh = () => ({
   userId: null,
   introSeen: {},
-  flags: {}, // generic toggles: rsvp:e1, check:hygiene:0, saved:ci3 ...
+  flags: {}, // generic toggles/values: rsvp:e1, check:hygiene:0, rec:r1 ...
   tasks: TASKS,
   applications: APPLICATIONS.map((a) => ({ ...a })),
-  listedEvents: [], // events listed through the form
+  listedEvents: [], // submitted through the in-site event listing form
+  reports: SEED_REPORTS, // executed-event reports, keyed by event id
   calls: [],
   submissions: [], // every form submit: {id,type,userId,data,at}
-  assigned: [], // tasks assigned from Assign task
-  eventAssign: [], // admin: events assigned to colleges
+  accounts: [], // people who signed up and were approved
+  signups: SEED_SIGNUPS.map((s) => ({ ...s })),
+  outbox: [], // demo mailbox: emails the system would send
+  credentials: SEED_CRED,
+  agreements: SEED_AGREEMENTS,
+  spotlight: SPOTLIGHT_SEED,
+  photos: {}, // uploaded photos keyed by structure node / person
+  eventAssign: [],
 });
 
 const load = () => {
@@ -24,6 +32,16 @@ const load = () => {
   return fresh();
 };
 
+const slug = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '').slice(0, 8) || 'u25';
+const PREFIX = { fellow: 'fellow', hoc: 'hoc', hoo: 'hoo', core: 'core', community: 'member' };
+const pw = () => {
+  const c = 'abcdefghjkmnpqrstuvwxyz23456789';
+  const pick = () => c[Math.floor(Math.random() * c.length)];
+  return `${pick().toUpperCase()}${Array.from({ length: 5 }, pick).join('')}@${Math.floor(10 + Math.random() * 89)}`;
+};
+
+export { APPROVER_TEXT, canApprove };
+
 const Ctx = createContext(null);
 export const useApp = () => useContext(Ctx);
 
@@ -33,7 +51,7 @@ export function AppProvider({ children }) {
   const tid = useRef(0);
 
   useEffect(() => {
-    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* ignore */ }
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* quota or blocked: keep working in memory */ }
   }, [state]);
 
   const toast = useCallback((msg) => {
@@ -42,47 +60,122 @@ export function AppProvider({ children }) {
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3200);
   }, []);
 
-  const user = useMemo(() => USERS.find((u) => u.id === state.userId) || null, [state.userId]);
+  const everyone = useMemo(() => [...USERS, ...state.accounts], [state.accounts]);
+  const user = useMemo(() => everyone.find((u) => u.id === state.userId) || null, [everyone, state.userId]);
 
-  const api = useMemo(() => ({
-    state,
-    user,
-    toasts,
-    toast,
-    login(id, password) {
-      const u = USERS.find((x) => x.id.toLowerCase() === String(id).trim().toLowerCase());
-      if (!u) return { ok: false, error: 'We could not find that user ID. Pick one from the list.' };
-      if (u.password !== password) return { ok: false, error: 'That password does not match this ID.' };
-      setState((s) => ({ ...s, userId: u.id }));
-      return { ok: true, user: u };
-    },
-    logout: () => setState((s) => ({ ...s, userId: null })),
-    introSeen: (id) => !!state.introSeen[id],
-    markIntro: (id, v = true) => setState((s) => ({ ...s, introSeen: { ...s.introSeen, [id]: v } })),
-    flag: (k) => !!state.flags[k],
-    val: (k) => state.flags[k],
-    setFlag: (k, v) => setState((s) => ({ ...s, flags: { ...s.flags, [k]: v } })),
-    toggle: (k) => setState((s) => ({ ...s, flags: { ...s.flags, [k]: !s.flags[k] } })),
-    count: (prefix) => Object.keys(state.flags).filter((k) => k.startsWith(prefix) && state.flags[k]).length,
-    submit(type, data, msg) {
-      setState((s) => ({ ...s, submissions: [{ id: `s${Date.now()}`, type, userId: s.userId, data, at: new Date().toISOString() }, ...s.submissions] }));
-      toast(msg || 'Sent. Thank you!');
-    },
-    addTask: (t) => setState((s) => ({ ...s, tasks: [{ ...t, id: `t${Date.now()}`, status: 'todo' }, ...s.tasks] })),
-    setTaskStatus: (id, status) => setState((s) => ({ ...s, tasks: s.tasks.map((t) => (t.id === id ? { ...t, status } : t)) })),
-    addEvent: (e) => setState((s) => ({ ...s, listedEvents: [{ ...e, id: `le${Date.now()}`, status: 'Pending review' }, ...s.listedEvents] })),
-    setEventStatus: (id, status) => setState((s) => ({ ...s, listedEvents: s.listedEvents.map((e) => (e.id === id ? { ...e, status } : e)) })),
-    setApplication: (id, patch) => setState((s) => ({ ...s, applications: s.applications.map((a) => (a.id === id ? { ...a, ...patch } : a)) })),
-    addCall: (c) => setState((s) => ({ ...s, calls: [{ ...c, id: `c${Date.now()}` }, ...s.calls] })),
-    removeCall: (id) => setState((s) => ({ ...s, calls: s.calls.filter((c) => c.id !== id) })),
-    addEventAssign: (a) => setState((s) => ({ ...s, eventAssign: [{ ...a, id: `ea${Date.now()}` }, ...s.eventAssign] })),
-    resetDemo: () => { setState(fresh()); toast('Demo data reset'); },
-  }), [state, user, toasts, toast]);
+  const api = useMemo(() => {
+    const mail = (s, to, subject, body) => ({ ...s, outbox: [{ id: `m${Date.now()}${Math.random().toString(36).slice(2, 5)}`, to, subject, body, at: new Date().toISOString() }, ...s.outbox] });
+    const makeAccount = (s, req) => {
+      const base = `${PREFIX[req.role]}-${slug(req.college)}`;
+      const n = s.accounts.filter((a) => a.id.startsWith(base)).length + 1;
+      const acct = { id: `${base}-${String(n).padStart(2, '0')}`, password: pw(), name: req.name, role: req.role, college: req.college, city: req.city || '', email: req.email, phone: req.phone, photo: req.photo, team: req.team || '', joined: new Date().toISOString() };
+      return acct;
+    };
+    const credsMail = (acct) => ({
+      subject: 'Welcome to the Under25 community: your ID and password',
+      body: `Hi ${acct.name.split(' ')[0]},\n\nYour Under25 Community Dashboard account is ready.\n\nUser ID: ${acct.id}\nPassword: ${acct.password}\n\nLog in and you will start with a short role briefing. Please change nothing in this email before using it.\n\nSafe, Seen and Celebrated,\nTeam Under25`,
+    });
+    return {
+      state,
+      user,
+      everyone,
+      toasts,
+      toast,
+      login(id, password) {
+        const u = everyone.find((x) => x.id.toLowerCase() === String(id).trim().toLowerCase());
+        if (!u) return { ok: false, error: 'We could not find that user ID. Pick one from the list or sign up.' };
+        if (u.password !== password) return { ok: false, error: 'That password does not match this ID.' };
+        setState((s) => ({ ...s, userId: u.id }));
+        return { ok: true, user: u };
+      },
+      logout: () => setState((s) => ({ ...s, userId: null })),
+      introSeen: (id) => !!state.introSeen[id],
+      markIntro: (id, v = true) => setState((s) => ({ ...s, introSeen: { ...s.introSeen, [id]: v } })),
+      flag: (k) => !!state.flags[k],
+      val: (k) => state.flags[k],
+      setFlag: (k, v) => setState((s) => ({ ...s, flags: { ...s.flags, [k]: v } })),
+      toggle: (k) => setState((s) => ({ ...s, flags: { ...s.flags, [k]: !s.flags[k] } })),
+      count: (prefix) => Object.keys(state.flags).filter((k) => k.startsWith(prefix) && state.flags[k]).length,
+      submit(type, data, msg) {
+        setState((s) => ({ ...s, submissions: [{ id: `s${Date.now()}`, type, userId: s.userId, data, at: new Date().toISOString() }, ...s.submissions] }));
+        toast(msg || 'Sent. Thank you!');
+      },
+
+      /* ----- sign-up and approvals ----- */
+      signup(req) {
+        const email = req.email.trim().toLowerCase();
+        if ([...state.accounts, ...state.signups.filter((x) => x.status === 'pending')].some((x) => x.email.toLowerCase() === email)) {
+          return { ok: false, error: 'That email already has an account or a request waiting for approval.' };
+        }
+        const entry = { id: `su${Date.now()}`, ...req, email, status: 'pending', at: new Date().toISOString() };
+        if (req.role === 'community') {
+          let acct;
+          setState((s) => {
+            acct = makeAccount(s, req);
+            const m = credsMail(acct);
+            return mail({ ...s, accounts: [...s.accounts, acct], signups: [{ ...entry, status: 'approved', acctId: acct.id }, ...s.signups] }, email, m.subject, m.body);
+          });
+          return { ok: true, instant: true, email };
+        }
+        setState((s) => mail({ ...s, signups: [entry, ...s.signups] }, email, 'We got your request to join Under25', `Hi ${req.name.split(' ')[0]},\n\nThanks for signing up as ${req.role === 'hoc' ? 'Head of Content' : req.role === 'hoo' ? 'Head of Operations' : req.role === 'core' ? `a core team member (${req.team})` : 'a Fellow'}. ${APPROVER_TEXT[req.role]}\n\nOnce you are approved we will email your user ID and password.\n\nTeam Under25`));
+        return { ok: true, instant: false, email };
+      },
+      approveSignup(id, by) {
+        setState((s) => {
+          const req = s.signups.find((x) => x.id === id);
+          if (!req || req.status !== 'pending') return s;
+          const acct = makeAccount(s, req);
+          const m = credsMail(acct);
+          return mail({ ...s, accounts: [...s.accounts, acct], signups: s.signups.map((x) => (x.id === id ? { ...x, status: 'approved', by, acctId: acct.id } : x)) }, req.email, m.subject, m.body);
+        });
+        toast('Approved. ID and password emailed.');
+      },
+      rejectSignup(id, by) {
+        setState((s) => {
+          const req = s.signups.find((x) => x.id === id);
+          if (!req) return s;
+          return mail({ ...s, signups: s.signups.map((x) => (x.id === id ? { ...x, status: 'rejected', by } : x)) }, req.email, 'About your Under25 request', `Hi ${req.name.split(' ')[0]},\n\nThanks for your interest. We cannot approve this request right now. You are welcome to join as a community member and apply again later.\n\nTeam Under25`);
+        });
+        toast('Request declined. The applicant was emailed.');
+      },
+      sendMail: (to, subject, body) => setState((s) => mail(s, to, subject, body)),
+
+      /* ----- tasks, events, reports ----- */
+      addTask: (t) => setState((s) => ({ ...s, tasks: [{ ...t, id: `t${Date.now()}`, status: 'todo' }, ...s.tasks] })),
+      setTaskStatus: (id, status) => setState((s) => ({ ...s, tasks: s.tasks.map((t) => (t.id === id ? { ...t, status } : t)) })),
+      addListedEvent: (form, ownerId) => setState((s) => ({
+        ...s,
+        listedEvents: [{
+          id: `le${Date.now()}`, title: form.title, type: 'On-ground', when: new Date(`${form.date}T${form.start || '15:00'}`).toISOString(), where: form.venue,
+          city: form.city, college: form.college, cap: Number(form.cap) || 100, going: 0, leaders: false, text: form.text, status: 'Pending review', ownerId, form, at: new Date().toISOString(),
+        }, ...s.listedEvents],
+      })),
+      setEventStatus: (id, status) => setState((s) => ({ ...s, listedEvents: s.listedEvents.map((e) => (e.id === id ? { ...e, status } : e)) })),
+      saveReport: (eventId, report) => setState((s) => ({ ...s, reports: { ...s.reports, [eventId]: report } })),
+      setApplication: (id, patch) => setState((s) => ({ ...s, applications: s.applications.map((a) => (a.id === id ? { ...a, ...patch } : a)) })),
+      addCall: (c) => setState((s) => ({ ...s, calls: [{ ...c, id: `c${Date.now()}` }, ...s.calls] })),
+      removeCall: (id) => setState((s) => ({ ...s, calls: s.calls.filter((c) => c.id !== id) })),
+      addEventAssign: (a) => setState((s) => ({ ...s, eventAssign: [{ ...a, id: `ea${Date.now()}` }, ...s.eventAssign] })),
+
+      /* ----- credentials, agreements, photos, spotlight ----- */
+      saveCredential: (c) => setState((s) => ({ ...s, credentials: [{ ...c, id: `k${Date.now()}`, at: new Date().toISOString() }, ...s.credentials.filter((x) => x.userId !== c.userId)] })),
+      submitAgreement: (a) => setState((s) => ({ ...s, agreements: [{ ...a, id: `ag${Date.now()}`, status: 'pending', at: new Date().toISOString() }, ...s.agreements.filter((x) => x.college !== a.college)] })),
+      setAgreementStatus: (id, status) => setState((s) => ({ ...s, agreements: s.agreements.map((a) => (a.id === id ? { ...a, status } : a)) })),
+      isPartner: (college) => PARTNERS.includes(college) || state.agreements.some((a) => a.college === college && a.status === 'approved'),
+      setPhoto: (key, data) => setState((s) => ({ ...s, photos: { ...s.photos, [key]: data } })),
+      addSpotlight: (b) => setState((s) => ({ ...s, spotlight: [{ ...b, id: `sp${Date.now()}` }, ...s.spotlight] })),
+      removeSpotlight: (id) => setState((s) => ({ ...s, spotlight: s.spotlight.filter((b) => b.id !== id) })),
+
+      resetDemo: () => { setState(fresh()); toast('Demo data reset'); },
+    };
+  }, [state, user, everyone, toasts, toast]);
 
   return <Ctx.Provider value={api}>{children}</Ctx.Provider>;
 }
 
+// Events visible to everyone: listed events only go live once approved.
 export const allEvents = (state) => [
-  ...state.listedEvents.map((e) => ({ ...e, type: 'On-ground', cap: e.cap || 100, going: 0, leaders: false })),
+  ...state.listedEvents.filter((e) => e.status === 'Approved'),
   ...EVENTS,
 ];
+export const isDigital = (e) => e.type === 'Session';

@@ -70,8 +70,12 @@ export const SectionTitle = ({ children, right }) => (
   </div>
 );
 export const Tag = ({ children, tone = '', ...r }) => <span className={`tag ${tone ? `tag-${tone}` : ''}`} {...r}>{children}</span>;
-export const Avatar = ({ name = '', size = '', style }) => (
-  <span className={`avatar ${size}`} style={style}>{name.split(/\s+/).filter(Boolean).slice(0, 2).map((s) => s[0]).join('').toUpperCase() || '?'}</span>
+export const Avatar = ({ name = '', size = '', style, src }) => (
+  src ? (
+    <span className={`avatar ${size}`} style={{ padding: 0, overflow: 'hidden', ...style }}><img src={src} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></span>
+  ) : (
+    <span className={`avatar ${size}`} style={style}>{name.split(/\s+/).filter(Boolean).slice(0, 2).map((s) => s[0]).join('').toUpperCase() || '?'}</span>
+  )
 );
 export const Progress = ({ value, max = 100 }) => (
   <div className="progress" role="progressbar" aria-valuenow={Math.round(value)} aria-valuemin={0} aria-valuemax={max}>

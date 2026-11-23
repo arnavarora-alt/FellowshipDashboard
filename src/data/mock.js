@@ -67,16 +67,17 @@ export const EVENTS = [
 ];
 
 export const TASKS = [
-  { id: 't-fellow-list', title: 'List your Club Orientation event', text: 'Fill the event listing form so Under25 can track and support it.', assignee: 'fellow-bnmit', due: inDays(1), status: 'todo', by: 'Under25 Team', priority: 'High' },
-  { id: 't-fellow-recruit', title: 'Interview 3 candidates for Events Captain', text: 'Every lead role gets an interview. You run it; Under25 supports on request.', assignee: 'fellow-bnmit', due: inDays(7), status: 'doing', by: 'Under25 Team', priority: 'Medium' },
-  { id: 't-fellow-cred', title: 'Add club page credentials to the log', text: 'So the page can be supported and handed over.', assignee: 'fellow-bnmit', due: inDays(3), status: 'todo', by: 'Under25 Team', priority: 'Medium' },
-  { id: 't-hygiene', title: 'Run the club page hygiene check', text: 'Handle, bio, logo, highlights and a first week of posts.', assignee: 'hoc-bnmit', due: inDays(2), status: 'todo', by: 'Ananya Rao', priority: 'High' },
+  { id: 't-fellow-list', to: '/listevent', title: 'List your Club Orientation event', text: 'Fill the event listing form so Under25 can review it and put it on the app.', assignee: 'fellow-bnmit', due: inDays(1), status: 'todo', by: 'Under25 Team', priority: 'High' },
+  { id: 't-fellow-recruit', to: '/recruitment', title: 'Interview 3 candidates for Events Lead', text: 'Every lead role gets an interview. You run it; Under25 supports on request.', assignee: 'fellow-bnmit', due: inDays(7), status: 'doing', by: 'Under25 Team', priority: 'Medium' },
+  { id: 't-fellow-cred', to: '/clubcredentials', auto: 'cred', title: 'Share your club page ID and password', text: 'One of your first tasks. Fill the form on this site. Only the Under25 admin team can see it.', assignee: 'fellow-bnmit', due: inDays(3), status: 'todo', by: 'Under25 Team', priority: 'Medium' },
+  { id: 't-fellow-agree', to: '/campusagreement', auto: 'agreement', title: 'Get the Campus Agreement signed', text: 'The legal agreement your college management signs to officiate the Under25 club. Upload the signed copy. This stays on your list until it is approved.', assignee: 'fellow-bnmit', due: inDays(14), status: 'todo', by: 'Under25 Team', priority: 'High' },
+  { id: 't-hygiene', to: '/hygiene', title: 'Run the club page hygiene check', text: 'Handle, bio, logo, highlights and a first week of posts.', assignee: 'hoc-bnmit', due: inDays(2), status: 'todo', by: 'Ananya Rao', priority: 'High' },
   { id: 't-launch', title: 'Publish the team launch post', text: 'One feedbreaker post plus one post for each position, so each person is seen.', assignee: 'hoc-bnmit', due: inDays(3), status: 'todo', by: 'Ananya Rao', priority: 'High' },
   { id: 't-calendar', title: 'Draft the 4-week content calendar', text: 'Include the Plaque launch and the talent hunt. Share it in the Draft Room.', assignee: 'hoc-bnmit', due: inDays(6), status: 'todo', by: 'Ananya Rao', priority: 'Medium' },
   { id: 't-hoo-check', title: 'Finalise the Club Orientation checklist', text: 'Venue, sound, check-in desk, volunteers, first-aid.', assignee: 'hoo-bnmit', due: inDays(2), status: 'doing', by: 'Ananya Rao', priority: 'High' },
-  { id: 't-hoo-partner', title: 'Collect 3 sponsor leads', text: 'With the Partnerships Lead. Keep proof for brand payouts.', assignee: 'hoo-bnmit', due: inDays(9), status: 'todo', by: 'Ananya Rao', priority: 'Low' },
+  { id: 't-hoo-partner', title: 'Collect 3 sponsor leads', text: 'With the Brand Lead. Keep proof for brand payouts.', assignee: 'hoo-bnmit', due: inDays(9), status: 'todo', by: 'Ananya Rao', priority: 'Low' },
   { id: 't-core-first', title: 'Introduce yourself to your lead team', text: 'Say who you are and which first small win you want to pick.', assignee: 'core-bnmit', due: inDays(2), status: 'todo', by: 'Kabir Shetty', priority: 'High' },
-  { id: 't-core-photos', title: 'Shoot 5 photos at Club Orientation', text: 'Candid is better than posed. Upload them from the Upload photos page.', assignee: 'core-bnmit', due: inDays(6), status: 'todo', by: 'Kabir Shetty', priority: 'Medium' },
+  { id: 't-core-photos', to: '/uploadphotos', title: 'Shoot 5 photos at Club Orientation', text: 'Candid is better than posed. Upload them from the Upload photos page.', assignee: 'core-bnmit', due: inDays(6), status: 'todo', by: 'Kabir Shetty', priority: 'Medium' },
 ];
 
 export const CONTENT_IDEAS = [
@@ -116,7 +117,7 @@ export const HYGIENE = [
   ['Credentials added to the credentials log', 'So Under25 can support and hand over.'],
   ['Team launch post planned', 'A feedbreaker plus one post per position.'],
 ];
-export const LAUNCH_POSTS = ['Feedbreaker post', 'Design Lead post', 'Content Captain post', 'Media Chief post', 'Tech Head post', 'Finance Head post', 'Culture Curator post', 'Partnerships Lead post', 'Marketing Lead post', 'Events Captain post'];
+export const LAUNCH_POSTS = ['Feedbreaker post', 'Design Lead post', 'Content Lead post', 'Media Lead post', 'Technical Lead post', 'Events Lead post', 'Culture Lead post', 'Marketing Lead post', 'Brand Lead post', 'Finance Lead post'];
 export const EVENT_CHECKLIST = {
   Before: ['Management permission and MOU on file', 'Event listed on the Under25 app', 'Venue, date and time locked', 'Roles assigned: Events Captain, volunteers, host', 'Marketing posts scheduled (T minus 7 days)', 'Run of show written and shared', 'Sound, mics and power tested', 'First-aid and safety contact noted'],
   'Day of': ['Check-in desk opens 30 minutes early', 'ID cards or wristbands ready', 'Code of conduct visible at the entrance', 'Host briefed on the run of show', 'Photographer and videographer in place', 'A named person for “what if it falls apart”'],
@@ -168,14 +169,14 @@ export const TEAM_MEMBERS = [
   { id: 'm2', name: 'Kabir Shetty', role: 'Head of Content', group: 'Content', status: 'Active' },
   { id: 'm3', name: 'Meera Iyer', role: 'Head of Operations', group: 'Operations', status: 'Active' },
   { id: 'm4', name: 'Diya Menon', role: 'Design Lead', group: 'Content', status: 'Active' },
-  { id: 'm5', name: 'Vihaan Patel', role: 'Content Captain', group: 'Content', status: 'Active' },
-  { id: 'm6', name: 'Isha Nair', role: 'Media Chief', group: 'Content', status: 'Active' },
-  { id: 'm7', name: '', role: 'Tech Head', group: 'Content', status: 'Open' },
-  { id: 'm8', name: 'Reyansh Gupta', role: 'Finance Head', group: 'Operations', status: 'Active' },
-  { id: 'm9', name: 'Anika Joshi', role: 'Culture Curator', group: 'Operations', status: 'Active' },
-  { id: 'm10', name: '', role: 'Partnerships Lead', group: 'Operations', status: 'Open' },
+  { id: 'm5', name: 'Vihaan Patel', role: 'Content Lead', group: 'Content', status: 'Active' },
+  { id: 'm6', name: 'Isha Nair', role: 'Media Lead', group: 'Content', status: 'Active' },
+  { id: 'm7', name: '', role: 'Technical Lead', group: 'Content', status: 'Open' },
+  { id: 'm8', name: 'Reyansh Gupta', role: 'Finance Lead', group: 'Operations', status: 'Active' },
+  { id: 'm9', name: 'Anika Joshi', role: 'Culture Lead', group: 'Operations', status: 'Active' },
+  { id: 'm10', name: '', role: 'Brand Lead', group: 'Operations', status: 'Open' },
   { id: 'm11', name: 'Rohan Das', role: 'Marketing Lead', group: 'Operations', status: 'Active' },
-  { id: 'm12', name: 'Saanvi Reddy', role: 'Events Captain', group: 'Operations', status: 'Active' },
+  { id: 'm12', name: 'Saanvi Reddy', role: 'Events Lead', group: 'Operations', status: 'Active' },
 ];
 
 export const FOLLOWER_SERIES = [210, 260, 330, 390, 470, 560, 650, 760, 840, 960, 1060, 1180];
@@ -195,7 +196,7 @@ export const TALENT = {
     { name: 'Aanya Sen', kind: 'Vocals', college: 'BNMIT', votes: 612 },
   ],
 };
-export const TEAM_OPENINGS = ['Design Lead', 'Content Captain', 'Media Chief', 'Tech Head', 'Finance Head', 'Culture Curator', 'Partnerships Lead', 'Marketing Lead', 'Events Captain'];
+export const TEAM_OPENINGS = ['Design Lead', 'Content Lead', 'Media Lead', 'Technical Lead', 'Events Lead', 'Culture Lead', 'Marketing Lead', 'Brand Lead', 'Finance Lead'];
 export const WORK_WITH_US = [
   { t: 'Volunteer at an event', d: 'Check-in desk, crowd flow, stage help. A certificate for every shift.' },
   { t: 'Perform at an event', d: 'Music, dance, comedy, spoken word. Open mics and the talent hunt.' },
@@ -240,4 +241,57 @@ export const QNA = [
   { id: 'q2', q: 'How many posts a week is the right rhythm?', by: 'Fellow, Hyderabad', a: 'Agree a weekly rhythm in the first month, review it at mid-year. Three solid posts beat seven rushed ones.', votes: 14 },
   { id: 'q3', q: 'What counts as an on-ground event for the listing?', by: 'Fellow, Jaipur', a: 'Anything held on campus for students: orientation, drives, quizzes, open mics. List it on the app so we can support.', votes: 9 },
   { id: 'q4', q: 'When can I run the Summit at Campus?', by: 'Fellow, Mumbai', a: 'Once the club page has 1,000 followers and the campus has 100 community members.', votes: 22 },
+];
+
+/* ======================= v2 additions ======================= */
+EVENTS.forEach((e) => {
+  if (e.type === 'On-ground' || e.type === 'Talent hunt') e.college = 'BNMIT';
+  e.digital = e.type === 'Session';
+});
+EVENTS.push(
+  { id: 'e15', title: 'Campus quiz league', type: 'On-ground', when: inDays(-2, 15), where: 'BNMIT Seminar Hall', city: 'Bengaluru', college: 'BNMIT', cap: 180, going: 164, leaders: false, text: 'Department-vs-department quiz with a leaderboard.' },
+  { id: 'e16', title: 'Club Orientation (first run)', type: 'On-ground', when: inDays(-9, 15), where: 'BNMIT Seminar Hall', city: 'Bengaluru', college: 'BNMIT', cap: 150, going: 142, leaders: false, text: 'Meet the club, meet the team and get your first challenge.' },
+);
+// a report already filed for e16; e15 is waiting for its report
+export const SEED_REPORTS = {
+  e16: { attendees: 142, description: 'Full house. Team introductions, a live house game and the first challenge brief. Management dropped in for ten minutes.', drive: 'https://drive.google.com/', by: 'Ananya Rao', at: inDays(-8) },
+};
+
+export const PARTNERS = ['DSCE', 'REVA University'];
+export const CAMPUS_FEED = [
+  { id: 'cf1', college: 'DSCE', city: 'Bengaluru', title: 'Open mic night', kind: 'Hosting', when: inDays(3, 17), text: 'Singers and stand-ups on one stage. Walk-ins welcome.' },
+  { id: 'cf2', college: 'Symbiosis', city: 'Pune', title: 'Alumni fireside chat', kind: 'Hosting', when: inDays(6, 16), text: 'Three senior Fellows on what they would do differently.' },
+  { id: 'cf3', college: 'REVA University', city: 'Bengaluru', title: 'Clothes and books drive', kind: 'Hosting', when: inDays(7, 11), text: 'Collect, sort and donate. Volunteers needed.' },
+  { id: 'cf4', college: 'CBIT', city: 'Hyderabad', title: 'Campus quiz league', kind: 'Hosting', when: inDays(9, 15), text: 'Eight departments, one trophy.' },
+  { id: 'cf5', college: 'JECRC', city: 'Jaipur', title: 'Portfolio review day', kind: 'Hosting', when: inDays(11, 14), text: 'Designers get feedback from seniors.' },
+  { id: 'cf6', college: 'Mithibai College', city: 'Mumbai', title: 'Talent hunt auditions', kind: 'Hosting', when: inDays(12, 15), text: 'Round 1 auditions open to everyone.' },
+];
+export const RECENT_PHOTOS = [
+  { id: 'rp1', college: 'DSCE', title: 'Club Orientation', when: inDays(-4), art: 'shapes-yellow', tone: 'yellow' },
+  { id: 'rp2', college: 'Symbiosis', title: 'Letter writing evening', when: inDays(-6), art: 'ok-purple', tone: 'purple' },
+  { id: 'rp3', college: 'REVA University', title: 'Daan Utsav drive', when: inDays(-8), art: 'shapes-green', tone: 'green' },
+  { id: 'rp4', college: 'CBIT', title: 'Open mic night', when: inDays(-10), art: 'ok-orange', tone: 'orange' },
+  { id: 'rp5', college: 'JECRC', title: 'Silent disco walk', when: inDays(-12), art: 'trophy-yellow', tone: 'yellow' },
+];
+
+// Banners pinned on top of Home. Event and session banners are built from real events at render time.
+export const SPOTLIGHT_SEED = [
+  { id: 'sp-mvp', kind: 'MVPs of the month', title: 'MVPs of the Month', sub: 'October edition. See who made the cut.', cta: 'See the post', href: 'https://www.instagram.com/', tone: 'purple', art: 'trophy-purple' },
+  { id: 'sp-stand', kind: 'Community standouts', title: 'Community standouts', sub: 'Shoutouts for people who made the community better this week.', cta: 'Read shoutouts', href: '/weeklyhang', tone: 'yellow', art: 'ok-yellow' },
+  { id: 'sp-chal', kind: 'Challenge of the month', title: 'Talent hunt content sprint', sub: 'Post 5 pieces about your campus talent hunt in 10 days.', cta: 'Take the challenge', href: '/challenges', tone: 'green', art: 'arrow-green' },
+];
+
+// Demo sign-up requests waiting for approval at BNMIT, so each approver has something to act on.
+export const SEED_SIGNUPS = [
+  { id: 'su1', name: 'Tara Mehta', college: 'BNMIT', email: 'tara.mehta@example.com', phone: '+91 90000 40001', role: 'hoc', team: '', status: 'pending', at: inDays(-1) },
+  { id: 'su2', name: 'Neel Banerjee', college: 'BNMIT', email: 'neel.banerjee@example.com', phone: '+91 90000 40002', role: 'core', team: 'Content', status: 'pending', at: inDays(-1) },
+  { id: 'su3', name: 'Ira Kapoor', college: 'BNMIT', email: 'ira.kapoor@example.com', phone: '+91 90000 40003', role: 'core', team: 'Operations', status: 'pending', at: inDays(-2) },
+  { id: 'su4', name: 'Kiara Bhat', college: 'NMIMS', email: 'kiara.bhat@example.com', phone: '+91 90000 40004', role: 'fellow', team: '', status: 'pending', at: inDays(-2) },
+];
+export const SEED_CRED = [
+  { id: 'k2', college: 'REVA University', fellow: 'Aarav Sharma', handle: '@under25.reva', platform: 'Instagram', login: 'reva.under25@example.com', pw: 'demo-pass-2', at: inDays(-20) },
+  { id: 'k3', college: 'Symbiosis', fellow: 'Tanvi Kulkarni', handle: '@under25.symbi', platform: 'Instagram', login: 'symbi.under25@example.com', pw: 'demo-pass-3', at: inDays(-14) },
+];
+export const SEED_AGREEMENTS = [
+  { id: 'ag1', college: 'NMIMS', by: 'Kiara Bhat', fileName: 'NMIMS-campus-agreement.pdf', size: 480000, status: 'pending', at: inDays(-3) },
 ];

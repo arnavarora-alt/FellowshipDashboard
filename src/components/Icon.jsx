@@ -8,7 +8,7 @@ import {
   ChevronDown, ChevronRight, ArrowRight, ArrowUpRight, ExternalLink, Clock, Copy, Lock, Mail, Phone, Upload, Filter, Menu,
   Star, Heart, Gamepad2, Send, TrendingUp, TrendingDown, Gift, Link2, Pencil, Trash2, Play, Info, TriangleAlert,
   CircleCheck, Flame, Medal, RefreshCcw, ArrowUp, ArrowDown, Pin, Zap, Target, Layers, Image, Newspaper, Wallet, Music,
-  Hash, ArrowUpDown, Circle, Repeat, Eraser, Smile, Fingerprint, Shuffle,
+  Hash, ArrowUpDown, Circle, Repeat, Eraser, Smile, Fingerprint, Shuffle, FileSignature, Wrench, Tag, Link, Globe,
 } from 'lucide-react';
 
 const MAP = {
@@ -21,7 +21,7 @@ const MAP = {
   ChevronDown, ChevronRight, ArrowRight, ArrowUpRight, ExternalLink, Clock, Copy, Lock, Mail, Phone, Upload, Filter, Menu,
   Star, Heart, Gamepad2, Send, TrendingUp, TrendingDown, Gift, Link2, Pencil, Trash2, Play, Info, TriangleAlert,
   CircleCheck, Flame, Medal, RefreshCcw, ArrowUp, ArrowDown, Pin, Zap, Target, Layers, Image, Newspaper, Wallet, Music,
-  Hash, ArrowUpDown, Circle, Repeat, Eraser, Smile, Fingerprint, Shuffle,
+  Hash, ArrowUpDown, Circle, Repeat, Eraser, Smile, Fingerprint, Shuffle, FileSignature, Wrench, Tag, Link, Globe,
 };
 
 export default function Icon({ name, size = 20, strokeWidth = 2, ...rest }) {

@@ -4,8 +4,7 @@ import Icon from '../components/Icon';
 import { Bars, CheckItem, Chips, DataTable, PageHead, Progress, SectionTitle, Stat, Tabs, Tag, Tilt, ExtLink } from '../components/ui';
 import { PlanCalendar } from './Club';
 import { useApp } from '../store/AppState';
-import { EVENT_GUIDELINES } from '../data/content';
-import { EVENT_CHECKLIST, EVENT_IDEAS, EVENT_SERIES, inDays } from '../data/mock';
+import { EVENT_IDEAS, EVENT_SERIES, inDays } from '../data/mock';
 
 export function EventStats() {
   const rows = [
@@ -62,36 +61,3 @@ export function EventIdeas() {
 }
 
 export const EventCal = () => (<><PageHead title="Event calendar" sub="Upcoming festivals, milestones and an event to run around each one." art="arrow-yellow" /><PlanCalendar kind="events" /></>);
-
-export function Checklists() {
-  const keys = Object.keys(EVENT_CHECKLIST);
-  const [tab, setTab] = useState(keys[0]);
-  const { count } = useApp();
-  const done = (k) => count(`check:event:${k}:`);
-  const total = keys.reduce((a, k) => a + EVENT_CHECKLIST[k].length, 0);
-  const sum = keys.reduce((a, k) => a + done(k), 0);
-  return (
-    <>
-      <PageHead title="Event checklists" sub="Before, day-of and after. Nothing slips an hour before doors open." art="ok-yellow" />
-      <div className="stack">
-        <div className="card"><div className="row-between"><h3>Overall</h3><span className="num dim">{sum} of {total}</span></div><div style={{ marginTop: 10 }}><Progress value={sum} max={total} /></div></div>
-        <Tabs value={tab} onChange={setTab} tabs={keys.map((k) => ({ id: k, label: `${k} ${done(k)}/${EVENT_CHECKLIST[k].length}` }))} />
-        <div className="card stack-sm">{EVENT_CHECKLIST[tab].map((t, i) => <CheckItem key={t} id={`check:event:${tab}:${i}`} title={t} />)}</div>
-      </div>
-    </>
-  );
-}
-
-export function EventGuide() {
-  return (
-    <>
-      <PageHead title="Event guidelines" sub="Safety, conduct and the promises every Under25 event keeps." art="shapes-orange" />
-      <div className="grid g2">
-        {EVENT_GUIDELINES.map(([t, d], i) => (
-          <Tilt key={t} max={4}><div className="lift row" style={{ flexWrap: 'nowrap', alignItems: 'flex-start' }}><span className="avatar">{i + 1}</span><div><h3 style={{ fontSize: 21 }}>{t}</h3><p className="dim small">{d}</p></div></div></Tilt>
-        ))}
-      </div>
-      <div className="callout" style={{ marginTop: 16 }}><Icon name="ShieldCheck" /><p><b>Our promise.</b> Under25 is an alcohol-free, smoke-free, drug-free organisation. No exceptions, ever. Every student should feel safe, seen and celebrated. <ExtLink href="https://grave-legume-23c.notion.site/List-your-event-on-the-Under25-App-3df337192f0a800b9ba2eb095cd5b8b4">How to list an event</ExtLink></p></div>
-    </>
-  );
-}

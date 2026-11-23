@@ -109,23 +109,37 @@ export const AWARD_STEPS = [
   { m: 'April', t: 'Ceremony', d: 'The Campus Awards ceremony closes the Fellowship year.' },
 ];
 
+// Club structure (matches the official chart): Fellow, two Heads, nine leads, 40 core members, 100+ community.
 export const STRUCTURE = {
   fellow: 'Fellow',
   heads: [
-    { id: 'hoc', name: 'Head of Content', leads: ['Design Lead', 'Content Captain', 'Media Chief', 'Tech Head'] },
-    { id: 'hoo', name: 'Head of Operations', leads: ['Finance Head', 'Culture Curator', 'Partnerships Lead', 'Marketing Lead', 'Events Captain'] },
+    { id: 'hoc', name: 'Head of Content', tone: 'purple', leads: [
+      { id: 'design', title: 'Design Lead', icon: 'Palette', leads: 1, cores: 5, coresLabel: 'Design cores' },
+      { id: 'content', title: 'Content Lead', icon: 'FileText', leads: 1, cores: 5, coresLabel: 'Content cores' },
+      { id: 'media', title: 'Media Lead', icon: 'Camera', leads: 1, cores: 5, coresLabel: 'Media cores' },
+      { id: 'tech', title: 'Technical Lead', icon: 'Wrench', leads: 1, cores: 2, coresLabel: 'Technical cores' },
+    ] },
+    { id: 'hoo', name: 'Head of Operations', tone: 'green', leads: [
+      { id: 'events', title: 'Events Lead', icon: 'CalendarDays', leads: 2, cores: 8, coresLabel: 'Events cores' },
+      { id: 'culture', title: 'Culture Lead', icon: 'Users', leads: 1, cores: 4, coresLabel: 'Culture cores' },
+      { id: 'marketing', title: 'Marketing Lead', icon: 'Megaphone', leads: 1, cores: 4, coresLabel: 'Marketing cores' },
+      { id: 'brand', title: 'Brand Lead', icon: 'Tag', leads: 1, cores: 5, coresLabel: 'Brand cores' },
+      { id: 'finance', title: 'Finance Lead', icon: 'Wallet', leads: 1, cores: 2, coresLabel: 'Finance cores' },
+    ] },
   ],
+  community: 100,
+  totals: { leads: 10, cores: 40, strength: 150 },
 };
 export const ROLE_BLURBS = {
   'Design Lead': 'Owns the look of every post, poster and story.',
-  'Content Captain': 'Runs the posting rhythm and the writing.',
-  'Media Chief': 'Shoots and edits photo and video on campus.',
-  'Tech Head': 'Handles tools, links, forms and the page’s backend.',
-  'Finance Head': 'Budgets, bills and sponsor money.',
-  'Culture Curator': 'Rituals, vibe and how the team feels.',
-  'Partnerships Lead': 'Brands, clubs and management partners.',
+  'Content Lead': 'Runs the posting rhythm and the writing.',
+  'Media Lead': 'Shoots and edits photo and video on campus.',
+  'Technical Lead': 'Handles tools, links, forms and the page’s backend.',
+  'Finance Lead': 'Budgets, bills and sponsor money.',
+  'Culture Lead': 'Rituals, vibe and how the team feels.',
+  'Brand Lead': 'Brands, partners and sponsors.',
   'Marketing Lead': 'Gets people to show up to every event.',
-  'Events Captain': 'Runs the event on the ground.',
+  'Events Lead': 'Runs the event on the ground.',
 };
 
 export const CONTENT_GUIDELINES = [

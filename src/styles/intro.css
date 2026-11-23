@@ -49,3 +49,15 @@
   .agent-art img.mascot { width: 170px; }
   .intro-top { padding: 16px 20px; }
 }
+
+/* Bigger role highlights (what a Fellow runs, etc.) */
+.abilities { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 680px; gap: 12px; }
+.abilities[data-count='5'] .ability:first-child { grid-column: 1 / -1; }
+.ability { gap: 14px; padding: 14px 16px; border-radius: 16px; font-size: 15px; align-items: center; border: 1px solid var(--line-strong); }
+.ab-ico { flex: none; width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; background: var(--accent); color: var(--on-accent); }
+.ab-copy { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ab-copy b { font: 900 20px/1 var(--f-display); font-stretch: 72%; text-transform: uppercase; letter-spacing: 0.01em; }
+.ab-copy em { font-style: normal; font-size: 13px; color: var(--grey-2); font-weight: 500; line-height: 1.35; }
+.intro-stage { overflow-y: auto; }
+@media (max-width: 860px) { .abilities { grid-template-columns: minmax(0, 1fr); } .abilities[data-count='5'] .ability:first-child { grid-column: auto; } }
+.ab-ico svg { color: var(--on-accent); }

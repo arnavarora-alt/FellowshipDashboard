@@ -2,44 +2,12 @@ import { useMemo, useRef, useState } from 'react';
 import Icon from '../components/Icon';
 import { Avatar, Chips, DataTable, Empty, Form, Modal, PageHead, SectionTitle, Stat, Sticker, Tabs, Tag, Tilt } from '../components/ui';
 import { useApp } from '../store/AppState';
-import { GOLDEN_RULES, RITUALS } from '../data/content';
+import { SUCCESSOR_FORM, INSIGHT_FORM } from '../data/forms';
+import { monthlyInsight } from '../lib/tasks';
+import { ROLES } from '../data/roles';
 import { ALUMNI, EVENTS, PEOPLE, QNA, TEAM_OPENINGS, WORK_WITH_US } from '../data/mock';
 import { ROLE_BLURBS } from '../data/content';
 import { fmtDate, fmtFull } from '../lib/utils';
-
-export function Agreement() {
-  const { flag, setFlag, user } = useApp();
-  const agreed = flag(`agree:${user.id}`);
-  const signed = useMemo(() => PEOPLE.map((p, i) => ({ ...p, signed: i % 7 !== 3, on: p.joined })), []);
-  return (
-    <>
-      <PageHead title="Community agreement" sub="Seven golden rules we swear by. Under25 is alcohol-free, smoke-free and drug-free. No exceptions, ever." art="shapes-orange" />
-      <div className="stack">
-        <div className="grid g3">
-          {GOLDEN_RULES.map(([t, d], i) => (
-            <Tilt key={t} max={5}>
-              <div className="lift"><span className="display" style={{ fontSize: 56, color: 'var(--accent-text)' }}>{i + 1}</span><h3 style={{ margin: '6px 0' }}>{t}</h3><p className="dim small">{d}</p></div>
-            </Tilt>
-          ))}
-        </div>
-        <div className="callout"><Icon name="Heart" /><p><b>Final reminder.</b> It won’t be the tasks or deadlines people remember. It’ll be this: did you make it better or just louder? Make people feel safe, seen and celebrated.</p></div>
-        <div className="card row-between">
-          <div><h3>{agreed ? 'You have agreed' : 'Agree to the community agreement'}</h3><p className="dim small">{agreed ? 'Thanks. This is saved on your profile.' : 'Tap to confirm you will follow these seven rules.'}</p></div>
-          <button className={`btn ${agreed ? 'btn-soft' : ''}`} onClick={() => setFlag(`agree:${user.id}`, !agreed)}>{agreed ? <><Icon name="Check" size={16} /> Agreed</> : 'I agree'}</button>
-        </div>
-        <SectionTitle>Rituals that stay constant</SectionTitle>
-        <div className="grid g3">{RITUALS.map(([t, d]) => <div className="card" key={t}><h3>{t}</h3><p className="dim small">{d}</p></div>)}</div>
-        {user.role === 'admin' && (
-          <>
-            <SectionTitle>Who has signed</SectionTitle>
-            <div className="grid g4 card"><Stat label="Signed" value={signed.filter((s) => s.signed).length} /><Stat label="Pending" value={signed.filter((s) => !s.signed).length} /></div>
-            <DataTable csv="agreements.csv" rows={signed.map((s) => ({ ...s, status: s.signed ? 'Signed' : 'Pending' }))} cols={[{ key: 'name', label: 'Name' }, { key: 'college', label: 'College' }, { key: 'role', label: 'Role' }, { key: 'status', label: 'Agreement', render: (r) => <Tag tone={r.signed ? 'green' : 'orange'}>{r.status}</Tag> }, { key: 'on', label: 'Joined' }]} />
-          </>
-        )}
-      </div>
-    </>
-  );
-}
 
 export function Join() {
   const { flag, setFlag, submit, user } = useApp();
@@ -183,25 +151,24 @@ export function Certificates() {
 
 export function Nominate() {
   const { submit, state, user } = useApp();
-  const mine = state.submissions.filter((s) => s.type === 'nomination' && s.userId === user.id);
+  const mine = state.submissions.filter((s) => s.type === 'successor-nomination' && s.userId === user.id);
+  const position = ROLES[user.role].label;
   return (
     <>
-      <PageHead title="Nominate someone" sub="Know someone who would be a great Fellow, lead or Fellow of the Week? Tell us why." art="ok-yellow" />
+      <PageHead title="Nominate your successor" sub="Moving on from Under25, or at the end of your tenure? Nominate the person who should take up your position next." art="ok-yellow" />
       <div className="split">
-        <div className="card">
-          <Form
-            submitLabel="Send nomination"
-            fields={[
-              { name: 'name', label: 'Their name', required: true },
-              { name: 'college', label: 'College', required: true },
-              { name: 'email', label: 'Email', type: 'email' },
-              { name: 'for', label: 'Nominating for', type: 'select', options: ['Next Fellow from my college', 'Lead role in my club', 'Fellow of the Week', 'Campus Awards'], required: true },
-              { name: 'why', label: 'Why them?', type: 'textarea', required: true },
-            ]}
-            onSubmit={(v, reset) => { submit('nomination', v, `Nominated ${v.name}.`); reset(); }}
-          />
+        <div className="stack">
+          <div className="callout"><Icon name="BadgeCheck" /><p className="small"><b>Position being handed over: {position}, {user.college}.</b> This is only for succession. To celebrate someone, use a shoutout in the Weekly Hang Session.</p></div>
+          <div className="card">
+            <Form
+              submitLabel="Send nomination"
+              initial={{ college: user.college }}
+              fields={SUCCESSOR_FORM}
+              onSubmit={(v, reset) => { submit('successor-nomination', { position, college: user.college, nominatedBy: user.name, ...v }, `${v.name} nominated to take over as ${position}.`); reset(); }}
+            />
+          </div>
         </div>
-        <div className="card"><h3>Your nominations</h3>{mine.length ? mine.map((s) => <div className="list-row" key={s.id}><Avatar name={s.data.name} size="sm" /><div className="grow"><b>{s.data.name}</b><p className="dim small">{s.data.for}</p></div></div>) : <p className="dim">None yet.</p>}</div>
+        <div className="card"><h3>Your nominations</h3>{mine.length ? mine.map((s) => <div className="list-row" key={s.id}><Avatar name={s.data.name} size="sm" /><div className="grow"><b>{s.data.name}</b><p className="dim small">{s.data.reason} · handover {fmtDate(s.data.handover)}</p></div><Tag tone="yellow">Under review</Tag></div>) : <p className="dim">None yet.</p>}</div>
       </div>
     </>
   );
@@ -241,27 +208,24 @@ export function UploadPhotos() {
 }
 
 export function Insight() {
-  const { submit, flag, setFlag } = useApp();
-  const done = flag('insight:done');
+  const { submit, flag, setFlag, user } = useApp();
+  const ins = monthlyInsight(new Date(), user, { flags: {} });
+  const key = ins?.monthKey || new Date().toISOString().slice(0, 7);
+  const done = flag(`insight:${key}:${user.id}`);
+  const locked = ins?.locked && user.role !== 'admin';
   return (
     <>
-      <PageHead title="Insight form" sub="The yearly insight form, run every March. Honest answers help us fix what is not working." art="arrow-green" />
+      <PageHead title="Insight form" sub="The monthly insight form. It becomes a mandatory task for Fellows and Heads of Operations on the 25th of every month." art="arrow-green" />
       {done ? (
-        <div className="card"><Sticker name="trophy-yellow" size={90} /><h3 style={{ margin: '10px 0 4px' }}>Thank you, form received</h3><p className="dim">We read every one. Expect a check-in call if you flagged something.</p></div>
+        <div className="card"><Sticker name="trophy-yellow" size={90} /><h3 style={{ margin: '10px 0 4px' }}>Thank you, this month’s form is in</h3><p className="dim">We read every one. The next one opens on the 25th of next month.</p></div>
+      ) : locked ? (
+        <div className="callout"><Icon name="Lock" /><div><b>Opens on {fmtDate(ins.unlock, { day: 'numeric', month: 'long' })}.</b><p className="small">It appears in your tasks that day as a mandatory task.</p></div></div>
       ) : (
         <div className="card">
           <Form
             submitLabel="Submit insight form"
-            fields={[
-              { name: 'followers', label: 'Club page followers today', type: 'number', required: true },
-              { name: 'team', label: 'Active team members', type: 'number', required: true },
-              { name: 'events', label: 'Events you ran this year', type: 'number', required: true },
-              { name: 'mood', label: 'How supported do you feel?', type: 'select', options: ['Very supported', 'Mostly supported', 'Somewhat', 'Not really'], required: true },
-              { name: 'blocker', label: 'Biggest blocker right now', type: 'select', options: ['Management buy-in', 'Team commitment', 'Content ideas', 'Exams and time', 'Money', 'Nothing'], required: true },
-              { name: 'win', label: 'Your proudest win', type: 'textarea' },
-              { name: 'ask', label: 'What do you need from Under25?', type: 'textarea' },
-            ]}
-            onSubmit={(v) => { submit('insight', v, 'Insight form submitted.'); setFlag('insight:done', true); }}
+            fields={INSIGHT_FORM}
+            onSubmit={(v) => { submit('insight', { month: key, college: user.college, role: user.role, ...v }, 'Insight form submitted.'); setFlag(`insight:${key}:${user.id}`, true); }}
           />
         </div>
       )}
@@ -295,13 +259,15 @@ export function QnA() {
 }
 
 export function Alumni() {
-  const { submit } = useApp();
+  const { submit, user } = useApp();
   const [who, setWho] = useState(null);
+  const list = user.role === 'admin' ? ALUMNI : ALUMNI.filter((a) => a.college === user.college);
   return (
     <>
-      <PageHead title="Alumni connect" sub="Senior Fellows who have been exactly where you are." art="trophy-purple" />
+      <PageHead title="Alumni connect" sub={user.role === 'admin' ? 'Senior Fellows from every college.' : `Senior Fellows from ${user.college}, who have been exactly where you are.`} art="trophy-purple" />
+      {!list.length && <Empty title={`No alumni from ${user.college} yet`} text="When Fellows from your college finish their tenure, they will show up here." />}
       <div className="grid g3">
-        {ALUMNI.map((a) => (
+        {list.map((a) => (
           <Tilt key={a.name}>
             <div className="lift stack-sm"><Avatar name={a.name} size="lg" /><h3 style={{ fontSize: 26 }}>{a.name}</h3><p className="dim small">{a.line}</p><p className="tiny dim">{a.college}</p>
               <div className="chips">{a.topics.map((t) => <Tag key={t} tone="soft">{t}</Tag>)}</div>

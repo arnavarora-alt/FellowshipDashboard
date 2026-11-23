@@ -1,12 +1,13 @@
-# Under25 Campus Fellowship Dashboard 2026-27
+# Under25 Community Dashboard (Campus Fellowship 2026-27)
 
-A role-based, interactive dashboard for the Under25 Campus Fellowship. Frontend only: all data is demo data and every
-interaction (RSVPs, tasks, forms, checklists) is saved in the browser's `localStorage`, so it can be deployed anywhere
-as static files and swapped to a real backend later.
+A role-based, interactive dashboard for the Under25 community. Frontend only: all data is demo data and every
+interaction (RSVPs, tasks, forms, sign-ups, approvals) is saved in the browser's `localStorage`, so it deploys anywhere
+as static files and can be swapped to a real backend later.
 
 ## See it right now
 
 Double-click **`Under25-Dashboard.html`**. It is the whole app in one file (no server needed).
+Live site: https://arnavarora-alt.github.io/FellowshipDashboard/
 
 ## Run and build
 
@@ -15,16 +16,16 @@ npm install
 npm run dev            # http://localhost:5173
 npm run build          # deployable site in dist/
 npm run build:single   # one-file build in dist-single/index.html
-npm test               # verifies the role-access matrix, first-login briefings and palette
+npm test               # verifies roles, approvals, first-login briefings and the colour palette
 ```
 
-Uses hash routing and relative asset paths, so `dist/` works on GitHub Pages, Netlify, Vercel or any static host.
-A GitHub Actions workflow (`.github/workflows/deploy.yml`) publishes to GitHub Pages on every push to `main`
-(set **Settings > Pages > Source** to **GitHub Actions** once).
+Hash routing and relative asset paths, so `dist/` works on GitHub Pages, Netlify, Vercel or any static host. A GitHub Actions
+workflow (`.github/workflows/deploy.yml`) publishes to GitHub Pages on every push to `main`.
 
-## One login, six experiences
+## One login, six experiences, plus sign-up
 
-Log in with a user ID and password; the ID decides the experience. The login page lists every demo account.
+Log in with a user ID and password; the ID decides the experience. The login page lists every demo account and has a
+**New to the community? Sign up!** link.
 
 | Role | User ID | Password |
 | --- | --- | --- |
@@ -37,49 +38,80 @@ Log in with a user ID and password; the ID decides the experience. The login pag
 
 These are demo credentials baked into the bundle. Replace the login with real authentication before going live.
 
+### Sign-up and approvals
+
+New people give name, college, email, phone and a photo, and pick what they are joining as.
+
+| Joining as | Approved by |
+| --- | --- |
+| Community member | Nobody. ID and password are issued straight away |
+| Core team member | Head of Content (Content team) or Head of Operations (Operations team), or the Fellow, of the same college |
+| Head of Content, Head of Operations | The Fellow of the same college |
+| Fellow | The Under25 admin team |
+
+On approval an ID and password are generated and emailed. There is no mail server in this prototype, so every email lands in the
+**Demo mailbox** (`#/mailbox`, linked from the login page). Wire `sendMail` in `src/store/AppState.jsx` to a real service later.
+
 ## First-login "agent select" entry
 
-Every user's first login opens a Valorant-style sequence: role reveal, hold to lock in, then a mission briefing.
-It can be replayed from the profile menu.
+Every user's first login opens a Valorant-style sequence: role reveal (a Fellow's five roles are shown large), hold to lock in,
+then a mission briefing. It can be replayed from the profile menu.
 
 | Role | Sees first |
 | --- | --- |
 | Fellow | Playbook, Drills, Club page resources, List your on-ground event |
 | Head of Content | Club page hygiene check, Content ideas bank, Team launch post task, one more upcoming task |
-| Head of Operations | Event ideas, Event checklists, Event guidelines |
+| Head of Operations | Event ideas, Event calendar, List your event |
 | Core team | What's new, City meetup, First task |
 | Community member | Community updates, Upcoming events, Opportunity to join the core team |
 | Admin | Applications, Fellow health, Events to review, Full database |
+
+## Home
+
+Every Home opens with the greeting, then a **Spotlight** carousel of pinned banners (modelled on the Under25 app): next digital
+sessions, upcoming community events, MVPs of the month (Instagram link), community standouts, challenge of the month. Admins manage
+the banners under **Spotlight banners**. Below: stats, quick actions, tasks, coming up, what other campuses are hosting, Campus
+Partners, photos from recent events, and What's new.
+
+## Events and forms
+
+- **RSVPs.** On-ground events: only community members RSVP. Digital sessions (Weekly Hang Session, Draft Room, Townhall, Academy):
+  everyone RSVPs on Google Calendar. City meetups and the talent hunt: RSVP in the app.
+- **Executed events.** Fellows and Heads of Operations mark an on-ground event executed with attendees, a description and a Drive
+  link to photos. It only counts as executed once that report is filed.
+- **List an event** is an in-site form (page 1 mirrors the Under25 Google Form). Admin reviews it under *Events and RSVPs*; approving
+  makes it live. Every form on the site shows under *Form submissions* with a CSV download (opens in Excel).
+- Other in-site forms: Summit slot request (with 3 auditorium photos), club page login (Fellow task, admin-only log), Campus Agreement
+  upload, monthly insight form (a mandatory task on the 25th for Fellows and Heads of Operations), successor nomination, Campus
+  Awards nomination (opens in March).
+- **Campus Agreement.** A Fellow uploads the signed agreement; on admin approval the college gets a **Campus Partner** tag shown to
+  everyone, and the Fellow unlocks *Campus Partner next steps* (content to be announced).
+
+Form definitions live in `src/data/forms.js`.
 
 ## Access rules
 
 All routing and navigation come from one registry: [`src/data/features.js`](src/data/features.js).
 
-- City meetups, College journey, Need help, Your team, Branded opportunities, Challenges: Fellow, Head of Content, Head of Operations, Core team (and admin).
 - Assign task: Fellow, Head of Content, Head of Operations (and admin).
-- Admin sees every page, plus the backend tools: full database (CSV export), fellowship applications (accept, reject, interview),
-  events and RSVPs, assign events, assign tasks, leadership directory, team calls, credentials log, branded missions listing,
-  Fellow health (MIA check-in script), program analytics and the program calendar. Press `Ctrl K` for search across everything.
-
-## Added beyond the spreadsheet (from the Playbook and Operator Guide)
-
-Six-semester roadmap and unlocks, Under25 Plaque tiers (3k, 10k, 20k followers), Summit at Campus eligibility
-(1,000 followers and 100 members), Campus Awards (6 categories, 25 awards) with a proof tracker and nominations,
-the seven golden rules and rituals, the four recurring sessions, the Under25 Care team directory, the 12-month program
-calendar, Fellow recruitment pipeline, MIA check-in scripts, batch analytics, and the Fellow Notion drills and resources.
+- Your team, Team structure, College journey, Milestones, Challenges, Branded opportunities, Need help: Fellow, Head of Content, Head of Operations, Core team.
+- Fellow only: Playbook (PDF embedded), Drills (embedded), Campus Awards, Campus Agreement, Summit slot request, club recruitment, alumni of their own college.
+- Admin sees every page plus the backend tools: full database (CSV), applications, events and RSVPs, form submissions, credentials log,
+  campus agreements, spotlight banners, leadership directory, team calls, Fellow health, analytics, program calendar. `Ctrl K` searches everything.
 
 ## Design
 
-Colours come only from the two PDFs: ink `#121A17`, yellow `#FFD12F`, orange `#FF5A00`, purple `#4D298E`, green `#085939`,
-plus their tints. Each role gets one accent. Type is Archivo (display) and Inter (body). Motion follows Emil Kowalski's
+Colours come only from the two PDFs: ink `#121A17`, yellow `#FFD12F`, orange `#FF5A00`, purple `#4D298E`, green `#085939`, plus their
+tints (checked by `npm test`). Each role gets one accent. Type is Archivo (display) and Inter (body). Motion follows Emil Kowalski's
 principles: ease-out curves, press feedback, springs only for decorative 3D tilt, and `prefers-reduced-motion` respected.
 
 ## Layout
 
 ```
-src/data/        roles, access registry, program content, demo data
+src/data/        roles, access registry, forms, program content, demo data
 src/store/       app state + localStorage persistence
-src/components/  shell, command palette, UI kit (tilt cards, forms, tables, charts)
-src/pages/       Login, RoleIntro, Home and one module per area
-scripts/verify.mjs   access-matrix and palette checks (npm test)
+src/lib/         approvals, tasks, image helpers
+src/components/  shell, command palette, Spotlight, UI kit (tilt cards, forms, tables, charts)
+src/pages/       Login, Signup, RoleIntro, Home and one module per area
+scripts/verify.mjs   access, approvals and palette checks (npm test)
 ```

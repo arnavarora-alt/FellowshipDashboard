@@ -1,97 +1,86 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Icon from '../components/Icon';
-import { Avatar, CheckItem, Chips, DataTable, ExtLink, Form, Modal, PageHead, Progress, SectionTitle, Stat, Sticker, Tabs, Tag, Tilt } from '../components/ui';
+import { Avatar, CheckItem, Chips, ExtLink, Form, Modal, PageHead, Progress, SectionTitle, Stat, Sticker, Tabs, Tag, Tilt } from '../components/ui';
+import { CampusTag, PdfViewer, PhotoPicker } from '../components/extra';
 import { EventCard } from './Events';
-import { useApp } from '../store/AppState';
-import { AWARDS, AWARD_STEPS, CARE_TEAM, DRILLS, GOLDEN_RULES, NOTION_HUB, SESSIONS, STRUCTURE, INCENTIVES } from '../data/content';
+import { useApp, allEvents } from '../store/AppState';
+import { AWARDS, AWARD_STEPS, DRILLS, NOTION_HUB } from '../data/content';
+import { CLUB_AWARD_FORM, CRED_FORM, SUMMIT_FORM } from '../data/forms';
 import { EVENTS } from '../data/mock';
+import { readFileData } from '../lib/image';
+import { fmtDate, fmtFull, relDay } from '../lib/utils';
+import playbookPdf from '../assets/playbook.pdf?url';
+import { ART } from '../lib/assets';
 
+/* ------------------------------ Playbook (Fellow only) ------------------------------ */
 export function Playbook() {
-  const [open, setOpen] = useState('who');
-  const S = [
-    ['who', 'Who you are', 'Fellow: the OG of your campus. The one who knows everyone, gets things done and brings people together. You become a community builder, a leader and the go-to person for Under25.'],
-    ['run', 'What you run', 'Club page (tell your campus story), Sporting Leagues (you are the CEO), On-ground events (your creative playground), Summit at Campus (direct a real festival once a year) and the Campus Awards (the year comes full circle).'],
-    ['get', 'What is in it for you', 'Learn from experts, mentors and peers. Grow with room to build your own ideas and a seat in closed-door brand conversations. Brag with certificates, recommendation letters, a shot at the Campus Awards and Under25 merch.'],
-    ['team', 'Who does what', `You build a team of rockstars. ${STRUCTURE.heads.map((h) => `${h.name}: ${h.leads.join(', ')}`).join('. ')}.`],
-    ['plaque', 'Wait, there is more', 'The Under25 Club Plaque: Silver at 3,000 followers, Gold at 10,000 and Purple at 20,000. Plus Fellow of the Week, where you get featured by Under25.'],
-  ];
   return (
     <>
-      <PageHead title="Playbook" sub="The Fellowship handbook, in short. The full version has the pages, the stories and the letters from your seniors." art="trophy-yellow" />
-      <div className="stack">
-        <div className="callout"><Icon name="BookOpen" /><div><b>Welcome. We’re genuinely glad you’re here.</b><p className="small">Over the next year you will meet hundreds of people, create experiences, discover talent, build communities, make mistakes and leave your campus a little better than you found it.</p></div></div>
-        <div className="stack-sm">
-          {S.map(([k, t, d]) => (
-            <button key={k} className="card card-click" onClick={() => setOpen(open === k ? '' : k)} aria-expanded={open === k}>
-              <div className="row-between"><h3 style={{ fontSize: 24 }}>{t}</h3><Icon name="ChevronDown" style={{ transform: open === k ? 'rotate(180deg)' : 'none', transition: 'transform 200ms var(--ease-out)' }} /></div>
-              {open === k && <p className="dim" style={{ marginTop: 8, maxWidth: '70ch' }}>{d}</p>}
-            </button>
-          ))}
-        </div>
-        <div className="row">
-          <ExtLink className="btn" href="https://grave-legume-23c.notion.site/Under25-Campus-Fellowship-Playbook-392337192f0a803c9f01fbcb63550226">Open the full Playbook <Icon name="ExternalLink" size={16} /></ExtLink>
-        </div>
-        <SectionTitle>The 7 golden rules</SectionTitle>
-        <div className="grid g3">{GOLDEN_RULES.slice(0, 3).map(([t, d], i) => <div className="card" key={t}><span className="display" style={{ fontSize: 44, color: 'var(--accent-text)' }}>{i + 1}</span><h3>{t}</h3><p className="dim small">{d}</p></div>)}</div>
-      </div>
+      <PageHead title="Playbook" sub="The Fellowship handbook. Read it right here: who you are, what you run and how the year unfolds." art="trophy-yellow" />
+      <PdfViewer src={playbookPdf} title="Under25 Campus Fellowship 2026-27 Playbook" />
     </>
   );
 }
 
+// Notion blocks framing of normal page URLs, but its embed URL (/ebd/<page id>) is meant to be framed.
+const embedUrl = (u) => u.replace(/notion\.site\/.*-([0-9a-f]{32})$/, 'notion.site/ebd/$1');
+
+/* ------------------------------ Drills (Fellow only, embedded) ------------------------------ */
 export function Drills() {
-  const { user, flag, toggle } = useApp();
+  const { flag, toggle } = useApp();
   const [cat, setCat] = useState('');
-  const mine = DRILLS.filter((d) => user.role === 'admin' || d.roles.includes(user.role));
-  const list = mine.filter((d) => !cat || d.cat === cat);
-  const done = mine.filter((d) => flag(`drill:${d.id}`)).length;
+  const [open, setOpen] = useState(DRILLS[0].id);
+  const list = DRILLS.filter((d) => !cat || d.cat === cat);
+  const cur = DRILLS.find((d) => d.id === open) || DRILLS[0];
+  const done = DRILLS.filter((d) => flag(`drill:${d.id}`)).length;
   return (
     <>
-      <PageHead title="Drills" sub="Structured resource packages. Learn leadership drill by drill. They open in the Fellowship Notion hub." art="ok-yellow" />
+      <PageHead title="Drills" sub="Structured resource packages. Learn leadership drill by drill. Each one opens right here." art="ok-yellow" />
       <div className="stack">
-        <div className="card"><div className="row-between"><div><h3>{done} of {mine.length} drills done</h3><p className="dim small">Mark one done after you have actually tried it.</p></div><ExtLink className="btn btn-sm btn-ghost" href={NOTION_HUB}>Open the Notion hub</ExtLink></div><div style={{ marginTop: 12 }}><Progress value={done} max={mine.length} /></div></div>
-        <Chips options={[...new Set(mine.map((d) => d.cat))]} value={cat} onChange={setCat} />
-        <div className="grid g2">
-          {list.map((d) => (
-            <Tilt key={d.id} max={4}>
-              <div className="lift stack-sm">
-                <div className="row-between"><Tag tone="soft">{d.cat}</Tag>{flag(`drill:${d.id}`) && <Tag tone="green">Done</Tag>}</div>
-                <h3 style={{ fontSize: 22 }}>{d.title}</h3><p className="dim small">{d.text}</p>
-                <div className="row" style={{ marginTop: 6 }}><ExtLink className="btn btn-sm" href={d.url}>Open drill</ExtLink><button className="btn btn-sm btn-ghost" onClick={() => toggle(`drill:${d.id}`)} aria-pressed={flag(`drill:${d.id}`)}>{flag(`drill:${d.id}`) ? 'Undo' : 'Mark done'}</button></div>
+        <div className="card"><div className="row-between"><div><h3>{done} of {DRILLS.length} drills done</h3><p className="dim small">Mark one done after you have actually tried it.</p></div><ExtLink className="btn btn-sm btn-ghost" href={NOTION_HUB}>Open the full hub</ExtLink></div><div style={{ marginTop: 12 }}><Progress value={done} max={DRILLS.length} /></div></div>
+        <div className="drills">
+          <div className="stack-sm">
+            <Chips options={[...new Set(DRILLS.map((d) => d.cat))]} value={cat} onChange={setCat} />
+            {list.map((d) => (
+              <button key={d.id} className="card card-click" style={open === d.id ? { borderColor: 'var(--accent-text)' } : undefined} onClick={() => setOpen(d.id)} aria-pressed={open === d.id}>
+                <div className="row-between"><Tag tone="soft">{d.cat}</Tag>{flag(`drill:${d.id}`) && <Tag tone="green"><Icon name="Check" size={12} /> Done</Tag>}</div>
+                <h4 style={{ margin: '8px 0 2px', fontSize: 16 }}>{d.title}</h4>
+                <p className="dim tiny">{d.text}</p>
+              </button>
+            ))}
+          </div>
+          <div className="stack-sm">
+            <div className="row-between"><h3 style={{ fontSize: 22 }}>{cur.title}</h3>
+              <div className="row" style={{ gap: 8 }}>
+                <button className={`btn btn-sm ${flag(`drill:${cur.id}`) ? 'btn-soft' : ''}`} onClick={() => toggle(`drill:${cur.id}`)} aria-pressed={flag(`drill:${cur.id}`)}>{flag(`drill:${cur.id}`) ? 'Done. Undo' : 'Mark done'}</button>
+                <ExtLink className="btn btn-sm btn-ghost" href={cur.url}>Open in a new tab</ExtLink>
               </div>
-            </Tilt>
-          ))}
+            </div>
+            <iframe key={cur.id} title={cur.title} src={embedUrl(cur.url)} loading="lazy" style={{ width: '100%', height: '74vh', border: 0, borderRadius: 16, background: 'var(--white)' }} />
+            <p className="tiny dim">If the page does not load here, use “Open in a new tab”.</p>
+          </div>
         </div>
       </div>
     </>
   );
 }
 
-export function Sessions() {
-  const nexts = { 'Weekly Hang Session': 'e1', 'The Draft Room': 'e2', Townhall: 'e7', 'Academy Session': 'e9' };
-  const { user } = useApp();
-  return (
-    <>
-      <PageHead title="Sessions" sub="Four recurring sessions make the learning rhythm of the year." art="shapes-yellow" />
-      <div className="grid g2">
-        {SESSIONS.filter((s) => s.name !== 'The Draft Room' || user.role !== 'core').map((s) => (
-          <div className="stack" key={s.name}>
-            <div className="card"><div className="row-between"><h3 style={{ fontSize: 24 }}>{s.name}</h3><Tag tone="yellow">{s.every}</Tag></div><p className="dim small" style={{ marginTop: 6 }}>{s.text}</p></div>
-            <EventCard e={EVENTS.find((e) => e.id === nexts[s.name])} />
-          </div>
-        ))}
-      </div>
-    </>
-  );
-}
-
+/* ------------------------------ Campus Awards (Fellow only) ------------------------------ */
 export function Awards() {
-  const { user, submit } = useApp();
+  const { submit, user } = useApp();
   const [open, setOpen] = useState(2);
   const [nom, setNom] = useState(false);
+  const march = new Date().getMonth() === 2;
   return (
     <>
-      <PageHead title="Campus Awards" sub="Where the whole year comes full circle. 6 categories, 25 awards. They only work if you keep proof all year." art="trophy-orange" right={user.role === 'fellow' || user.role === 'admin' ? <button className="btn" onClick={() => setNom(true)}>Nominate</button> : undefined} />
+      <PageHead title="Campus Awards" sub="You nominate your Under25 club, not a person. The whole year comes full circle here: 6 categories, 25 awards." art="trophy-orange" />
       <div className="stack">
+        <div className={`callout ${march ? '' : 'warn'}`}>
+          <Icon name={march ? 'PartyPopper' : 'Lock'} />
+          <div className="grow"><b>{march ? 'Nominations are open.' : 'Nominations open in March.'}</b><p className="small">{march ? 'Nominate your club with proof of what it did this year.' : 'Until then, keep proof as you go: reports, screenshots and insights. Awards need records.'}</p></div>
+          <button className="btn" disabled={!march} onClick={() => setNom(true)}>Nominate your club</button>
+        </div>
         <div className="grid g3">{AWARD_STEPS.map((s) => <div className="card" key={s.m}><Tag tone="yellow">{s.m}</Tag><h3 style={{ margin: '10px 0 4px' }}>{s.t}</h3><p className="dim small">{s.d}</p></div>)}</div>
         <div className="split">
           <div className="stack-sm">
@@ -103,21 +92,26 @@ export function Awards() {
             ))}
           </div>
           <div className="card"><h3>Your proof tracker</h3><p className="dim small" style={{ margin: '4px 0 12px' }}>Awards, brand payouts and CV points all need records. Collect as you go, not in March.</p>
-            <div className="stack-sm">{['Event reports filed', 'Screenshots of page insights', 'Signed MOU on file', 'Full-session tenure in role', 'Attendance and photos saved'].map((p, i) => <CheckItem key={p} id={`proof:${i}`} title={p} />)}</div></div>
+            <div className="stack-sm">{['Event reports filed', 'Screenshots of page insights', 'Signed Campus Agreement approved', 'Full-session tenure in role', 'Attendance and photos saved'].map((p, i) => <CheckItem key={p} id={`proof:${i}`} title={p} />)}</div></div>
         </div>
       </div>
-      <Modal open={nom} onClose={() => setNom(false)} title="Nominate for an award">
-        <Form submitLabel="Submit nomination" fields={[{ name: 'award', label: 'Award', type: 'select', options: AWARDS.flatMap((a) => a.items), required: true }, { name: 'who', label: 'Nominee (person, team or club)', required: true }, { name: 'proof', label: 'Proof (link or short note)', type: 'textarea', required: true }]} onSubmit={(v) => { submit('award-nomination', v, 'Nomination submitted.'); setNom(false); }} />
+      <Modal open={nom} onClose={() => setNom(false)} title="Nominate your club">
+        <Form submitLabel="Submit nomination" initial={{ club: `Under25 ${user.college}` }} fields={CLUB_AWARD_FORM} onSubmit={(v) => { submit('club-award-nomination', { college: user.college, ...v }, 'Your club has been nominated.'); setNom(false); }} />
       </Modal>
     </>
   );
 }
 
+/* ------------------------------ Summit at Campus (slot request form) ------------------------------ */
 export function Summit() {
+  const { user, submit, state } = useApp();
   const followers = 1180;
-  const members = 74;
+  const members = 112;
   const ok = followers >= 1000 && members >= 100;
-  const { toast } = useApp();
+  const [open, setOpen] = useState(false);
+  const [photos, setPhotos] = useState([]);
+  const [photoErr, setPhotoErr] = useState('');
+  const req = state.submissions.find((s) => s.type === 'summit-request' && s.userId === user.id);
   return (
     <>
       <PageHead title="Summit at Campus" sub="Once a year, everything comes together. You get to direct a real festival, not a college fest committee." art="trophy-purple" />
@@ -128,47 +122,92 @@ export function Summit() {
           ))}
         </div>
         <div className={`callout ${ok ? '' : 'warn'}`}><Icon name={ok ? 'PartyPopper' : 'Info'} /><div><b>{ok ? 'You are eligible. Time to direct a festival.' : 'Not yet, and that is on purpose.'}</b><p className="small">A summit needs an audience that already knows the club. The bar protects you from running a summit too early.</p></div></div>
-        <button className="btn" style={{ alignSelf: 'flex-start' }} disabled={!ok} onClick={() => toast('Request sent to Under25')}>Request Summit slot</button>
+        {req ? (
+          <div className="card"><div className="row-between"><div><h3>Slot request sent</h3><p className="dim small">Ideal date {fmtDate(req.data.date)} · {req.data.attendees} attendees · {req.data.setting.toLowerCase()} · {req.data.ticketing.toLowerCase()}</p></div><Tag tone="yellow">Under review</Tag></div></div>
+        ) : (
+          <button className="btn" style={{ alignSelf: 'flex-start' }} disabled={!ok} onClick={() => setOpen(true)}>Request Summit slot</button>
+        )}
         <SectionTitle>How to get there</SectionTitle>
         <div className="grid g3">{[['Run a posting rhythm', 'Three solid posts a week beat seven rushed ones.'], ['Fill the room', 'Every on-ground event is a chance to add 10 members.'], ['Use city meetups', 'Meet members from other colleges and bring them back.']].map(([t, d]) => <div className="card" key={t}><h3>{t}</h3><p className="dim small">{d}</p></div>)}</div>
       </div>
+      <Modal open={open} onClose={() => setOpen(false)} title="Request a Summit slot" wide>
+        <div className="stack">
+          <Form
+            submitLabel="Send request"
+            fields={SUMMIT_FORM}
+            onSubmit={(v) => {
+              if (photos.length !== 3) { setPhotoErr('Upload exactly 3 photos of the auditorium.'); return; }
+              submit('summit-request', { college: user.college, requestedBy: user.name, ...v, photos }, 'Summit slot requested. Under25 will review it.');
+              setOpen(false); setPhotos([]); setPhotoErr('');
+            }}
+            footer={<span className="tiny dim">Photos: {photos.length}/3</span>}
+          />
+          <div className="field"><span className="label">Photos of the auditorium (3) *</span><PhotoPicker count={3} value={photos} onChange={(p) => { setPhotos(p); setPhotoErr(''); }} label="Add photos" />{photoErr && <span className="err" role="alert">{photoErr}</span>}</div>
+        </div>
+      </Modal>
     </>
   );
 }
 
+/* ------------------------------ College status (top of My campus) ------------------------------ */
 export function CollegeStatus() {
-  const { user } = useApp();
+  const { user, state } = useApp();
+  const now = new Date();
+  const mine = [...state.listedEvents.filter((e) => e.status === 'Approved'), ...EVENTS].filter((e) => e.college === user.college && e.type === 'On-ground');
+  const upcoming = mine.filter((e) => new Date(e.when) >= now).sort((a, b) => new Date(a.when) - new Date(b.when));
+  const recent = Object.entries(state.reports).map(([id, r]) => ({ id, r, e: [...EVENTS, ...state.listedEvents].find((x) => x.id === id) })).filter((x) => x.e && x.e.college === user.college);
   return (
     <>
       <PageHead title="College status" sub={`Where ${user.college} stands right now, and what to do next.`} art="shapes-green" />
       <div className="stack">
-        <div className="card"><div className="grid g4"><Stat label="Club page" value="Active" count={false} /><Stat label="Followers" value={1180} /><Stat label="Community members" value={74} /><Stat label="Core team" value={64} /></div></div>
+        <div className="card">
+          <div className="row" style={{ marginBottom: 14 }}><h3 style={{ fontSize: 26 }}>{user.college}</h3><CampusTag college={user.college} small={false} /></div>
+          <div className="grid g4"><Stat label="Club page" value="Active" count={false} /><Stat label="Followers" value={1180} /><Stat label="Community members" value={112} /><Stat label="Core team" value={64} /></div>
+        </div>
         <div className="grid g2">
-          <div className="card"><h3>Health check</h3>{[['Posting rhythm', 'On track', 'green'], ['Management buy-in', 'MOU signed', 'green'], ['Team size', '64 of 100', 'orange'], ['Summit eligibility', 'Members short', 'orange']].map(([a, b, t]) => <div className="list-row" key={a}><b className="grow">{a}</b><Tag tone={t}>{b}</Tag></div>)}</div>
-          <div className="card"><h3>Next best steps</h3>{['Recruit the open Tech Head and Partnerships Lead', 'Run one more on-ground event before December', 'Post the team launch carousel', 'Start collecting Campus Awards proof'].map((s) => <div className="list-row" key={s}><Icon name="ArrowRight" style={{ color: 'var(--accent-text)' }} /><span>{s}</span></div>)}</div>
+          <div className="card"><h3>Health check</h3>{[['Posting rhythm', 'On track', 'green'], ['Management buy-in', 'Agreement pending', 'orange'], ['Team size', '64 of 100', 'orange'], ['Summit eligibility', 'Eligible', 'green']].map(([a, b, t]) => <div className="list-row" key={a}><b className="grow">{a}</b><Tag tone={t}>{b}</Tag></div>)}</div>
+          <div className="card"><h3>Next best steps</h3>{['Get the Campus Agreement signed by management', 'Recruit the open Technical Lead and Brand Lead', 'Post the team launch carousel', 'File the report for your last event'].map((s) => <div className="list-row" key={s}><Icon name="ArrowRight" style={{ color: 'var(--accent-text)' }} /><span>{s}</span></div>)}</div>
+        </div>
+
+        <SectionTitle>Highlights</SectionTitle>
+        <div>
+          <h4 style={{ marginBottom: 10 }}>Recent event pictures</h4>
+          <div className="grid g4">
+            {recent.map(({ id, r, e }) => (
+              <div className="photo-tile tone-green" key={id}><img src={ART['trophy-yellow']} alt="" /><div className="cap"><b>{e.title}</b>{r.attendees} came · <a href={r.drive} target="_blank" rel="noreferrer noopener" style={{ textDecoration: 'underline' }}>photos</a></div></div>
+            ))}
+            {!recent.length && <p className="dim small">Photos appear here when you file an event report with a Drive link.</p>}
+          </div>
+        </div>
+        <div>
+          <h4 style={{ margin: '14px 0 10px' }}>Upcoming event</h4>
+          {upcoming[0] ? <div style={{ maxWidth: 620 }}><EventCard e={upcoming[0]} /></div> : <div className="card dim">Nothing is listed yet. <Link className="link" to="/listevent">List an event</Link></div>}
         </div>
       </div>
     </>
   );
 }
 
+/* ------------------------------ Club recruitment ------------------------------ */
 const CANDS = [
-  { id: 'r1', name: 'Tanvi Kulkarni', role: 'Events Captain', stage: 'Interview' },
-  { id: 'r2', name: 'Aman Verma', role: 'Tech Head', stage: 'Applied' },
-  { id: 'r3', name: 'Lakshmi Pillai', role: 'Partnerships Lead', stage: 'Interview' },
-  { id: 'r4', name: 'Manav Bose', role: 'Tech Head', stage: 'Applied' },
-  { id: 'r5', name: 'Pooja Naidu', role: 'Design Lead', stage: 'Offer' },
-  { id: 'r6', name: 'Sahil Desai', role: 'Media Chief', stage: 'Joined' },
+  { id: 'r1', name: 'Tanvi Kulkarni', role: 'Events Lead', stage: 'Interview', email: 'tanvi.k@example.com', when: null },
+  { id: 'r2', name: 'Aman Verma', role: 'Technical Lead', stage: 'Applied', email: 'aman.v@example.com' },
+  { id: 'r3', name: 'Lakshmi Pillai', role: 'Brand Lead', stage: 'Interview', email: 'lakshmi.p@example.com', when: null },
+  { id: 'r4', name: 'Manav Bose', role: 'Technical Lead', stage: 'Applied', email: 'manav.b@example.com' },
+  { id: 'r5', name: 'Pooja Naidu', role: 'Design Lead', stage: 'Interview', email: 'pooja.n@example.com', when: null },
+  { id: 'r6', name: 'Sahil Desai', role: 'Media Lead', stage: 'Joined', email: 'sahil.d@example.com' },
 ];
-const STAGES = ['Applied', 'Interview', 'Offer', 'Joined'];
+const STAGES = ['Applied', 'Interview', 'Joined'];
 export function Recruitment() {
-  const { val, setFlag, submit } = useApp();
+  const { val, setFlag, submit, sendMail, user, toast } = useApp();
   const [pub, setPub] = useState(false);
+  const [iv, setIv] = useState(null);
   const stage = (c) => val(`rec:${c.id}`) || c.stage;
+  const when = (c) => val(`recdate:${c.id}`) || c.when;
   return (
     <>
       <PageHead title="Club recruitment" sub="Publish roles with clear job descriptions, interview every lead and finalise the team by the deadline." art="ok-purple" right={<button className="btn" onClick={() => setPub(true)}>Publish a role</button>} />
-      <div className="grid g4">
+      <div className="grid g3">
         {STAGES.map((s) => (
           <div className="card" key={s} style={{ background: 'var(--surface)' }}>
             <div className="row-between" style={{ marginBottom: 12 }}><h3>{s}</h3><Tag>{CANDS.filter((c) => stage(c) === s).length}</Tag></div>
@@ -176,7 +215,14 @@ export function Recruitment() {
               {CANDS.filter((c) => stage(c) === s).map((c) => (
                 <div className="card" key={c.id} style={{ padding: 12, background: 'var(--surface-2)' }}>
                   <div className="row" style={{ flexWrap: 'nowrap' }}><Avatar name={c.name} size="sm" /><div><b style={{ fontSize: 14 }}>{c.name}</b><p className="tiny dim">{c.role}</p></div></div>
-                  {s !== 'Joined' && <button className="btn btn-sm btn-soft" style={{ marginTop: 10 }} onClick={() => setFlag(`rec:${c.id}`, STAGES[STAGES.indexOf(s) + 1])}>Move to {STAGES[STAGES.indexOf(s) + 1]}</button>}
+                  {s === 'Interview' && when(c) && <p className="tiny" style={{ marginTop: 8, color: 'var(--accent-text)', fontWeight: 700 }}><Icon name="CalendarClock" size={13} style={{ display: 'inline', verticalAlign: '-2px' }} /> {fmtFull(when(c))}</p>}
+                  {s === 'Applied' && <button className="btn btn-sm btn-soft" style={{ marginTop: 10 }} onClick={() => setIv(c)}>Move to interview</button>}
+                  {s === 'Interview' && (
+                    <div className="row" style={{ marginTop: 10, gap: 6 }}>
+                      <button className="btn btn-sm btn-soft" onClick={() => { setFlag(`rec:${c.id}`, 'Joined'); toast(`${c.name} joined the team`); }}>Move to joined</button>
+                      <button className="btn btn-sm btn-ghost" onClick={() => setIv(c)}>Reschedule</button>
+                    </div>
+                  )}
                 </div>
               ))}
               {!CANDS.filter((c) => stage(c) === s).length && <p className="tiny dim">Nobody here.</p>}
@@ -184,34 +230,108 @@ export function Recruitment() {
           </div>
         ))}
       </div>
+      <Modal open={!!iv} onClose={() => setIv(null)} title={`Interview ${iv?.name || ''}`}>
+        {iv && (
+          <Form
+            submitLabel="Schedule and notify"
+            fields={[{ name: 'when', label: 'Interview date and time', type: 'datetime-local', required: true }, { name: 'link', label: 'Meeting link or room', placeholder: 'https://meet.google.com/… or Seminar Hall' }]}
+            onSubmit={(v) => {
+              const iso = new Date(v.when).toISOString();
+              setFlag(`rec:${iv.id}`, 'Interview');
+              setFlag(`recdate:${iv.id}`, iso);
+              sendMail(iv.email, `Your Under25 interview for ${iv.role}`, `Hi ${iv.name.split(' ')[0]},\n\nYour interview for ${iv.role} at ${user.college} is scheduled for ${fmtFull(iso)}.\n${v.link ? `Where: ${v.link}\n` : ''}\nSee you there,\n${user.name}, Fellow`);
+              toast(`Interview set for ${fmtFull(iso)}. ${iv.name.split(' ')[0]} was emailed.`);
+              setIv(null);
+            }}
+          />
+        )}
+      </Modal>
       <Modal open={pub} onClose={() => setPub(false)} title="Publish a role">
-        <Form submitLabel="Publish" fields={[{ name: 'role', label: 'Role', type: 'select', required: true, options: ['Design Lead', 'Content Captain', 'Media Chief', 'Tech Head', 'Finance Head', 'Culture Curator', 'Partnerships Lead', 'Marketing Lead', 'Events Captain'] }, { name: 'jd', label: 'What will they do?', type: 'textarea', required: true }, { name: 'deadline', label: 'Apply by', type: 'date', required: true }]} onSubmit={(v) => { submit('role-posting', v, `${v.role} is open for applications.`); setPub(false); }} />
+        <Form submitLabel="Publish" fields={[{ name: 'role', label: 'Role', type: 'select', required: true, options: ['Design Lead', 'Content Lead', 'Media Lead', 'Technical Lead', 'Events Lead', 'Culture Lead', 'Marketing Lead', 'Brand Lead', 'Finance Lead'] }, { name: 'jd', label: 'What will they do?', type: 'textarea', required: true }, { name: 'deadline', label: 'Apply by', type: 'date', required: true }]} onSubmit={(v) => { submit('role-posting', v, `${v.role} is open for applications.`); setPub(false); }} />
       </Modal>
     </>
   );
 }
 
-const CRED = [
-  { id: 'k1', college: 'BNMIT', handle: '@under25.bnmit', platform: 'Instagram', login: 'bnmit.under25@example.com', pw: 'demo-pass-1', by: 'Ananya Rao', at: '12 Oct' },
-  { id: 'k2', college: 'REVA University', handle: '@under25.reva', platform: 'Instagram', login: 'reva.under25@example.com', pw: 'demo-pass-2', by: 'Fellow', at: '3 Oct' },
-  { id: 'k3', college: 'Symbiosis', handle: '@under25.symbi', platform: 'Instagram', login: 'symbi.under25@example.com', pw: 'demo-pass-3', by: 'Fellow', at: '20 Oct' },
-];
-export function Credentials() {
-  const { user, state, submit } = useApp();
-  const [shown, setShown] = useState({});
-  const [add, setAdd] = useState(false);
-  const extra = state.submissions.filter((s) => s.type === 'credential').map((s) => ({ id: s.id, college: user.college, ...s.data, login: s.data.login, by: user.name, at: 'Today' }));
-  const rows = [...extra, ...(user.role === 'admin' ? CRED : CRED.filter((c) => c.college === user.college))];
+/* ------------------------------ Club page login (Fellow form, one of the first tasks) ------------------------------ */
+export function CredForm() {
+  const { user, state, saveCredential, toast } = useApp();
+  const mine = state.credentials.find((c) => c.userId === user.id);
   return (
     <>
-      <PageHead title="Credentials log" sub="Club page logins, kept so Under25 can support the page and hand it over cleanly." art="ok-orange" right={<button className="btn" onClick={() => setAdd(true)}>Add a login</button>} />
-      <div className="stack">
-        <div className="callout warn"><Icon name="TriangleAlert" /><p><b>Demo only. Do not enter real passwords.</b> This prototype keeps everything in your own browser, unencrypted. A live version must encrypt these and limit who can see them.</p></div>
-        <DataTable rows={rows} cols={[{ key: 'college', label: 'College' }, { key: 'handle', label: 'Page' }, { key: 'platform', label: 'Platform' }, { key: 'login', label: 'Login' }, { key: 'pw', label: 'Password', noCsv: true, render: (r) => <span className="row" style={{ gap: 8 }}><code>{shown[r.id] ? r.pw : '••••••••'}</code><button className="btn btn-icon" style={{ width: 30, height: 30 }} aria-label={shown[r.id] ? 'Hide password' : 'Show password'} onClick={() => setShown((s) => ({ ...s, [r.id]: !s[r.id] }))}><Icon name="Eye" size={14} /></button></span> }, { key: 'at', label: 'Updated' }]} />
+      <PageHead title="Club page login" sub="One of your first tasks. Share your club page ID and password so Under25 can support the page and hand it over cleanly." art="ok-orange" />
+      <div className="split">
+        <div className="card">
+          <Form
+            submitLabel={mine ? 'Update login' : 'Submit login'}
+            initial={mine ? { handle: mine.handle, platform: mine.platform, login: mine.login } : {}}
+            fields={CRED_FORM}
+            onSubmit={(v) => { saveCredential({ userId: user.id, college: user.college, fellow: user.name, ...v }); toast('Saved. Only the Under25 admin team can see this.'); }}
+          />
+        </div>
+        <div className="stack">
+          <div className={`callout ${mine ? '' : 'warn'}`}><Icon name={mine ? 'CircleCheck' : 'Lock'} /><div><b>{mine ? `Submitted ${relDay(mine.at).toLowerCase()}` : 'Not submitted yet'}</b><p className="small">{mine ? `Page ${mine.handle}. Your task is complete.` : 'This task stays on your list until you submit.'}</p></div></div>
+          <div className="callout"><Icon name="ShieldCheck" /><p className="small"><b>Private.</b> This form feeds the credentials sheet in the Under25 admin database. No other role can open it, and it is not shown back to you.</p></div>
+          <div className="callout warn"><Icon name="TriangleAlert" /><p className="small"><b>Demo only. Do not enter a real password.</b> This prototype keeps data in your browser, unencrypted. A live version needs a secure backend.</p></div>
+        </div>
       </div>
-      <Modal open={add} onClose={() => setAdd(false)} title="Add a login">
-        <Form submitLabel="Save to log" fields={[{ name: 'handle', label: 'Page handle', required: true, placeholder: '@under25.yourcampus' }, { name: 'platform', label: 'Platform', type: 'select', options: ['Instagram', 'Email', 'Canva', 'Other'], required: true }, { name: 'login', label: 'Login (email or username)', required: true }, { name: 'pw', label: 'Password', type: 'password', required: true }]} onSubmit={(v) => { submit('credential', v, 'Saved to the credentials log.'); setAdd(false); }} />
-      </Modal>
+    </>
+  );
+}
+
+/* ------------------------------ Campus Agreement + Campus Partner ------------------------------ */
+export function CampusAgreement() {
+  const { user, state, submitAgreement, toast, isPartner } = useApp();
+  const mine = state.agreements.find((a) => a.college === user.college);
+  const partner = isPartner(user.college);
+  const [file, setFile] = useState(null);
+  const [err, setErr] = useState('');
+  const step = partner ? 3 : mine?.status === 'pending' ? 2 : 1;
+  const upload = async () => {
+    if (!file) { setErr('Choose the signed agreement first (PDF or photo).'); return; }
+    try {
+      const dataUrl = await readFileData(file);
+      submitAgreement({ college: user.college, by: user.name, fileName: file.name, size: file.size, dataUrl });
+      toast('Uploaded. Under25 will review your Campus Agreement.');
+      setFile(null); setErr('');
+    } catch (e) { setErr(e.message); }
+  };
+  return (
+    <>
+      <PageHead title="Campus Agreement" sub="The legal agreement your college management signs to officiate the Under25 club on campus. Once Under25 approves it, your college becomes a Campus Partner." art="shapes-orange" />
+      <div className="stack">
+        <div className="card">
+          <div className="timeline">
+            {[['Get it signed', 'Management signs the Campus Agreement.'], ['Upload the signed copy', 'PDF or a clear photo, under 900 KB.'], ['Under25 approves', 'Your college gets the Campus Partner title.']].map(([t, d], i) => (
+              <div key={t} className={`tl-item ${i + 1 < step ? 'done' : i + 1 === step ? 'now' : ''}`}><span className="tl-dot">{i + 1 < step && <Icon name="Check" size={12} strokeWidth={3.5} />}</span><b>{t}</b><p className="dim small">{d}</p></div>
+            ))}
+          </div>
+        </div>
+        {partner ? (
+          <div className="callout"><Icon name="BadgeCheck" /><div className="grow"><b>{user.college} is a Campus Partner.</b><p className="small">The tag now shows next to your college name for everyone. Your next steps are unlocked.</p></div><Link className="btn" to="/partnernext">See next steps</Link></div>
+        ) : mine?.status === 'pending' ? (
+          <div className="callout"><Icon name="Clock" /><div><b>Waiting for approval.</b><p className="small">{mine.fileName} uploaded {relDay(mine.at).toLowerCase()}. Under25 will review it.</p></div></div>
+        ) : (
+          <div className="card stack">
+            {mine?.status === 'rejected' && <div className="callout warn"><Icon name="TriangleAlert" /><p className="small"><b>The last upload was not approved.</b> Upload a clearer signed copy.</p></div>}
+            <div className="field"><label htmlFor="ag">Signed Campus Agreement</label><input id="ag" className="input" type="file" accept=".pdf,image/*" onChange={(e) => { setFile(e.target.files?.[0] || null); setErr(''); }} />{err && <span className="err" role="alert">{err}</span>}</div>
+            <div><button className="btn" onClick={upload}>Upload for approval</button></div>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+export function PartnerNext() {
+  const { user } = useApp();
+  return (
+    <>
+      <PageHead title="Campus Partner next steps" sub={`What ${user.college} does next as an Under25 Campus Partner.`} art="trophy-yellow" />
+      <div className="stack">
+        <div className="callout"><Icon name="BadgeCheck" /><p><b>You are a Campus Partner.</b> Under25 will publish your campus’s next steps here.</p></div>
+        <div className="grid g3">{[1, 2, 3].map((n) => <div className="card" key={n} style={{ borderStyle: 'dashed' }}><Tag>Coming soon</Tag><h3 style={{ margin: '10px 0 4px' }}>Next step {n}</h3><p className="dim small">Content to be announced.</p></div>)}</div>
+      </div>
     </>
   );
 }

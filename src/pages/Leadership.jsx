@@ -1,14 +1,14 @@
 import { useMemo, useState } from 'react';
 import Icon from '../components/Icon';
 import { Avatar, Chips, ExtLink, Form, Modal, PageHead, Progress, SectionTitle, Stat, Sticker, Tabs, Tag, Tilt } from '../components/ui';
-import { EventCard } from './Events';
+import { PhotoPicker } from '../components/extra';
 import { useApp } from '../store/AppState';
-import { CARE_TEAM, CURRENT_SEM, INCENTIVES, JOURNEY, MEETUP_KINDS, PLAQUE, ROLE_BLURBS, RUN_OF_SHOW, STRUCTURE } from '../data/content';
-import { BRANDED, CHALLENGES, CITIES, EVENTS, TEAM_MEMBERS } from '../data/mock';
+import { CARE_TEAM, CURRENT_SEM, INCENTIVES, JOURNEY, PLAQUE, ROLE_BLURBS, STRUCTURE } from '../data/content';
+import { BRANDED, CHALLENGES, TEAM_MEMBERS } from '../data/mock';
 import { fmtDate, relDay } from '../lib/utils';
 
 export function Team() {
-  const { user, toast } = useApp();
+  const { user, toast, state } = useApp();
   const [grp, setGrp] = useState(user.role === 'hoc' ? 'Content' : user.role === 'hoo' ? 'Operations' : '');
   const list = TEAM_MEMBERS.filter((m) => !grp || m.group === grp || m.group === 'Fellow');
   const active = TEAM_MEMBERS.filter((m) => m.status === 'Active').length;
@@ -22,7 +22,7 @@ export function Team() {
           {list.map((m) => (
             <Tilt key={m.id} max={5}>
               <div className="lift row" style={{ flexWrap: 'nowrap' }}>
-                {m.name ? <Avatar name={m.name} size="lg" /> : <span className="avatar lg" style={{ background: 'var(--surface-2)', color: 'var(--grey-2)' }}><Icon name="UserPlus" /></span>}
+                {m.name ? <Avatar src={state.photos[`team:${m.id}`] || state.photos[`node:${m.role}`]} name={m.name} size="lg" /> : <span className="avatar lg" style={{ background: 'var(--surface-2)', color: 'var(--grey-2)' }}><Icon name="UserPlus" /></span>}
                 <div className="grow"><b style={{ fontSize: 17 }}>{m.name || 'Open role'}</b><p className="dim small">{m.role}</p>
                   <div className="row" style={{ marginTop: 8, gap: 6 }}>
                     <Tag tone={m.status === 'Open' ? 'orange' : 'green'}>{m.status}</Tag>
@@ -37,36 +37,80 @@ export function Team() {
   );
 }
 
-export function Structure() {
-  const [sel, setSel] = useState('Events Captain');
-  const open = TEAM_MEMBERS.filter((m) => m.status === 'Open').map((m) => m.role);
-  const Node = ({ label, strong }) => (
-    <button className="card" onClick={() => setSel(label)} aria-pressed={sel === label} style={{ padding: '10px 14px', textAlign: 'center', minWidth: 140, ...(strong ? { background: 'var(--accent)', color: 'var(--on-accent)', borderColor: 'transparent' } : sel === label ? { borderColor: 'var(--accent-text)' } : null) }}>
-      <b style={{ fontFamily: 'var(--f-display)', fontStretch: '75%', fontSize: 16 }}>{label}</b>{open.includes(label) && <div><Tag tone="orange">Open</Tag></div>}
+function OrgNode({ id, title, name, tone, icon, solid, onPick }) {
+  const { state } = useApp();
+  const photo = state.photos[`node:${id}`];
+  return (
+    <button className={`org-node org-${tone} ${solid ? 'solid' : ''}`} onClick={() => onPick(id)} aria-label={`${title}${name ? `, ${name}` : ''}. Open details`}>
+      <Avatar src={photo} name={name || title} size="lg" style={solid ? { background: 'var(--ink)', color: 'var(--white)' } : undefined} />
+      <span className="org-title"><Icon name={icon} size={15} /> {title}</span>
+      <small>{name || 'Open role'}</small>
     </button>
   );
+}
+
+export function Structure() {
+  const { user, state, setPhoto, toast } = useApp();
+  const [sel, setSel] = useState(null);
+  const S = STRUCTURE;
+  const members = Object.fromEntries(TEAM_MEMBERS.map((m) => [m.role, m]));
+  const nodes = {
+    fellow: { title: 'Fellow', name: state.accounts.find((a) => a.role === 'fellow' && a.college === user.college)?.name || 'Ananya Rao', branch: 'all', text: 'The OG of the campus. Leads the whole club.' },
+    hoc: { title: 'Head of Content', name: members['Head of Content']?.name, branch: 'hoc', text: 'Leads the content team: Design, Content, Media and Technical.' },
+    hoo: { title: 'Head of Operations', name: members['Head of Operations']?.name, branch: 'hoo', text: 'Leads the operations team: Events, Culture, Marketing, Brand and Finance.' },
+  };
+  S.heads.forEach((h) => h.leads.forEach((l) => { nodes[l.id] = { title: l.title, name: members[l.title]?.name, branch: h.id, text: ROLE_BLURBS[l.title], leads: l.leads, cores: l.cores }; }));
+  const canEdit = (n) => user.role === 'admin' || user.role === 'fellow' || (user.role === 'hoc' && n.branch === 'hoc') || (user.role === 'hoo' && n.branch === 'hoo');
+  const cur = sel && nodes[sel];
   return (
     <>
-      <PageHead title="Team structure" sub="Two Heads sit under the Fellow. Tap a role to see what it does." art="shapes-orange" />
-      <div className="stack">
-        <div className="card" style={{ overflowX: 'auto' }}>
-          <div className="stack" style={{ alignItems: 'center', minWidth: 760 }}>
-            <Node label="Fellow" strong />
-            <div style={{ width: 2, height: 16, background: 'var(--line-strong)' }} />
-            <div className="row" style={{ alignItems: 'flex-start', gap: 40, flexWrap: 'nowrap' }}>
-              {STRUCTURE.heads.map((h) => (
-                <div key={h.id} className="stack" style={{ alignItems: 'center' }}>
-                  <Node label={h.name} strong />
-                  <div style={{ width: 2, height: 14, background: 'var(--line-strong)' }} />
-                  <div className="row" style={{ gap: 8, justifyContent: 'center', maxWidth: 420 }}>{h.leads.map((l) => <Node key={l} label={l} />)}</div>
-                </div>
-              ))}
-            </div>
+      <PageHead title="Team structure" sub="Your club at a glance. Every role shows a photo above its title. Tap a role to see what it does or add a photo." art="shapes-orange" />
+      <div className="card" style={{ overflowX: 'auto' }}>
+        <div className="org tree">
+          <ul>
+            <li>
+              <OrgNode id="fellow" title="Fellow" name={nodes.fellow.name} tone="fellow" icon="Crown" solid onPick={setSel} />
+              <ul>
+                {S.heads.map((h) => (
+                  <li key={h.id}>
+                    <OrgNode id={h.id} title={h.name} name={nodes[h.id].name} tone={h.tone} icon={h.id === 'hoc' ? 'FileText' : 'Users'} solid onPick={setSel} />
+                    <ul>
+                      {h.leads.map((l) => (
+                        <li key={l.id}>
+                          <OrgNode id={l.id} title={l.title} name={nodes[l.id].name} tone={h.tone} icon={l.icon} onPick={setSel} />
+                          <span className="org-link" />
+                          <span className={`org-count org-${h.tone}`} title={`${l.leads} lead${l.leads > 1 ? 's' : ''}`}>{l.leads}</span>
+                          <span className="org-link dashed" />
+                          <div className={`org-cores org-${h.tone}`}><Icon name="Users" size={20} /><b>{l.coresLabel}</b><span className={`org-count org-${h.tone}`}>{l.cores}</span></div>
+                        </li>
+                      ))}
+                    </ul>
+                  </li>
+                ))}
+              </ul>
+            </li>
+          </ul>
+          <div className="org-community"><span className="org-community-tag"><Icon name="UsersRound" size={18} /> Community layer</span>
+            <div className="row-between" style={{ width: '100%', padding: '18px 8px 6px' }}><b>Minimum {S.community}+ community members</b><span className="dim small" style={{ maxWidth: 420, textAlign: 'right' }}>All members from various colleges: passionate contributors, content creators, volunteers and supporters.</span></div>
+          </div>
+          <div className="org-totals">
+            <div className="org-total"><Icon name="Crown" /> <span><b>Lead</b> (Total {S.totals.leads})</span><i /><Icon name="Users" /> <span><b>Core team members</b> (Total {S.totals.cores})</span></div>
+            <div className="org-total big"><Icon name="UsersRound" size={26} /> <b>Total strength = {S.totals.strength}+</b></div>
           </div>
         </div>
-        <div className="callout"><Icon name="Info" /><div><b>{sel}</b><p className="small">{ROLE_BLURBS[sel] || (sel === 'Fellow' ? 'The OG of the campus. Leads the whole club.' : 'Leads a team of leads and reports to the Fellow.')}</p></div></div>
-        <div className="row"><ExtLink className="btn btn-ghost" href="https://grave-legume-23c.notion.site/Under25-Club-Structure-3a5337192f0a80618d46c08daf02b495">Open the full RNR on Notion <Icon name="ExternalLink" size={16} /></ExtLink></div>
       </div>
+      <Modal open={!!cur} onClose={() => setSel(null)} title={cur?.title || ''}>
+        {cur && (
+          <div className="stack">
+            <div className="row" style={{ flexWrap: 'nowrap' }}><Avatar src={state.photos[`node:${sel}`]} name={cur.name || cur.title} size="lg" /><div><b style={{ fontSize: 18 }}>{cur.name || 'Open role'}</b><p className="dim small">{cur.title}</p></div></div>
+            <p>{cur.text}</p>
+            {cur.cores != null && <p className="small dim">{cur.leads} lead{cur.leads > 1 ? 's' : ''} · {cur.cores} core team members</p>}
+            {canEdit(cur) ? (
+              <div className="field"><span className="label">Photo (shown above the title)</span><PhotoPicker value={state.photos[`node:${sel}`] ? [state.photos[`node:${sel}`]] : []} onChange={(p) => { setPhoto(`node:${sel}`, p[0] || null); toast('Photo updated'); }} label="Upload photo" /></div>
+            ) : <p className="tiny dim">Your Fellow or Head can add the photo for this role.</p>}
+          </div>
+        )}
+      </Modal>
     </>
   );
 }
@@ -185,23 +229,6 @@ export function Branded() {
         <Form submitLabel="Publish mission" fields={[{ name: 'brand', label: 'Brand', required: true }, { name: 'title', label: 'Mission title', required: true }, { name: 'text', label: 'Brief', type: 'textarea', required: true }, { name: 'reward', label: 'Reward', required: true }, { name: 'due', label: 'Deadline', type: 'date', required: true }, { name: 'spots', label: 'Spots', type: 'number', default: '10' }, { name: 'tag', label: 'Type', type: 'select', options: ['Activation', 'Content', 'Growth', 'Event'], required: true }]}
           onSubmit={(v) => { submit('mission', v, 'Mission is live for Fellows.'); setAdd(false); }} />
       </Modal>
-    </>
-  );
-}
-
-export function CityMeetups() {
-  const { user } = useApp();
-  const [city, setCity] = useState(user.role === 'admin' ? '' : user.city);
-  const list = EVENTS.filter((e) => e.type === 'City meetup' && (!city || e.city === city) && (e.leaders ? true : true));
-  return (
-    <>
-      <PageHead title="City meetups" sub="Monthly meetups of Fellows and club members, exclusive to the Under25 community." art="shapes-yellow" />
-      <div className="stack">
-        <div className="grid g3">{MEETUP_KINDS.map((k) => <div className="card" key={k.id}><h3>{k.title}</h3><p className="dim small">{k.text}</p></div>)}</div>
-        <div className="row-between"><SectionTitle>Next meetups</SectionTitle><select className="select" style={{ width: 200 }} value={city} onChange={(e) => setCity(e.target.value)} aria-label="City"><option value="">All cities</option>{CITIES.map((c) => <option key={c}>{c}</option>)}</select></div>
-        <div className="grid g2">{list.map((e) => <EventCard key={e.id} e={e} />)}</div>
-        <div className="card"><h3>What a meetup looks like</h3><div className="timeline" style={{ marginTop: 14 }}>{RUN_OF_SHOW.map((r) => <div key={r} className="tl-item done"><span className="tl-dot" /><b>{r}</b></div>)}</div><p className="dim small">Curation changes every month. The rituals stay constant.</p></div>
-      </div>
     </>
   );
 }

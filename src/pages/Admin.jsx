@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { CampusTag } from '../components/extra';
 import { useSearchParams } from 'react-router-dom';
 import Icon from '../components/Icon';
 import { Avatar, Bars, Chips, DataTable, Empty, ExtLink, Form, Modal, PageHead, Progress, SearchBox, SectionTitle, Stat, Tabs, Tag, Tilt } from '../components/ui';
@@ -13,7 +14,11 @@ export function Database() {
   const [role, setRole] = useState('');
   const [city, setCity] = useState('');
   const [view, setView] = useState(null);
-  const rows = useMemo(() => PEOPLE.filter((p) => (!role || p.role === role) && (!city || p.city === city) && (!q || `${p.name} ${p.email} ${p.college} ${p.phone} ${p.id}`.toLowerCase().includes(q.toLowerCase()))), [q, role, city]);
+  const { state } = useApp();
+  const ROLE = { fellow: 'Fellow', hoc: 'Head of Content', hoo: 'Head of Operations', core: 'Core team', community: 'Community member' };
+  const joined = state.accounts.map((a) => ({ id: a.id, name: a.name, phone: a.phone, email: a.email, college: a.college, city: a.city || '', role: ROLE[a.role], joined: (a.joined || '').slice(0, 10), photo: a.photo, lastActive: 0 }));
+  const people = [...joined, ...PEOPLE];
+  const rows = useMemo(() => people.filter((p) => (!role || p.role === role) && (!city || p.city === city) && (!q || `${p.name} ${p.email} ${p.college} ${p.phone} ${p.id}`.toLowerCase().includes(q.toLowerCase()))), [q, role, city, state.accounts]);
   return (
     <>
       <PageHead title="Full database" sub="Name, number, email, college and role for everyone in the program. Export what you filter." art="shapes-yellow" />
@@ -22,8 +27,8 @@ export function Database() {
           <select className="select" style={{ width: 180 }} value={city} onChange={(e) => setCity(e.target.value)} aria-label="City"><option value="">All cities</option>{CITIES.map((c) => <option key={c}>{c}</option>)}</select></div>
         <Chips options={['Fellow', 'Head of Content', 'Head of Operations', 'Core team', 'Community member']} value={role} onChange={setRole} all="All roles" />
         <DataTable rows={rows} csv="under25-database.csv" pageSize={12} cols={[
-          { key: 'name', label: 'Name', render: (r) => <span className="row" style={{ gap: 10, flexWrap: 'nowrap' }}><Avatar name={r.name} size="sm" /><b>{r.name}</b></span> },
-          { key: 'phone', label: 'Number' }, { key: 'email', label: 'Email' }, { key: 'college', label: 'College' }, { key: 'city', label: 'City' },
+          { key: 'name', label: 'Name', render: (r) => <span className="row" style={{ gap: 10, flexWrap: 'nowrap' }}><Avatar src={r.photo} name={r.name} size="sm" /><b>{r.name}</b></span> },
+          { key: 'phone', label: 'Number' }, { key: 'email', label: 'Email' }, { key: 'college', label: 'College', render: (r) => <span className="row" style={{ gap: 6 }}>{r.college}<CampusTag college={r.college} /></span> }, { key: 'city', label: 'City' },
           { key: 'role', label: 'Role', render: (r) => <Tag tone={r.role === 'Fellow' ? 'yellow' : r.role === 'Head of Content' ? 'purple' : r.role === 'Head of Operations' ? 'orange' : r.role === 'Core team' ? 'green' : ''}>{r.role}</Tag> },
           { key: 'id', label: '', noCsv: true, render: (r) => <button className="btn btn-sm btn-ghost" onClick={() => setView(r)}>View</button> },
         ]} />
@@ -74,17 +79,27 @@ export function Applications() {
 
 export function AdminEvents() {
   const { state, setEventStatus, addEventAssign, toast, flag } = useApp();
-  const [tab, setTab] = useState('all');
-  const rows = allEvents(state).map((e) => ({ ...e, rsvp: (e.going || 0) + (flag(`rsvp:${e.id}`) ? 1 : 0) }));
+  const [tab, setTab] = useState('listings');
+  const [view, setView] = useState(null);
+  const rows = [...state.listedEvents.filter((e) => e.status === 'Approved'), ...EVENTS].map((e) => ({ ...e, rsvp: (e.going || 0) + (flag(`rsvp:${e.id}`) ? 1 : 0), when: e.when }));
+  const listings = state.listedEvents.map((e) => ({ id: e.id, title: e.title, college: e.college, city: e.city, state: e.form?.state, date: e.when, venue: e.where, cap: e.cap, ticketing: e.form?.ticketing, status: e.status, by: e.form?.name, whatsapp: e.form?.whatsapp, kind: e.form?.kind, description: e.text, poster: e.form?.poster, price: e.form?.price }));
+  const listCols = [{ key: 'title', label: 'Event' }, { key: 'college', label: 'College' }, { key: 'city', label: 'City' }, { key: 'state', label: 'State' }, { key: 'kind', label: 'Type' }, { key: 'date', label: 'When', render: (r) => fmtFull(r.date) }, { key: 'venue', label: 'Venue' }, { key: 'cap', label: 'Expected' }, { key: 'ticketing', label: 'Tickets' }, { key: 'price', label: 'Price (₹)' }, { key: 'by', label: 'Submitted by' }, { key: 'whatsapp', label: 'WhatsApp' }, { key: 'poster', label: 'Poster link' }, { key: 'description', label: 'Description' }, { key: 'status', label: 'Status', render: (r) => <Tag tone={r.status === 'Approved' ? 'green' : r.status === 'Rejected' ? 'orange' : 'yellow'}>{r.status}</Tag> }];
+  const reports = Object.entries(state.reports).map(([id, r]) => { const e = [...EVENTS, ...state.listedEvents].find((x) => x.id === id); return { id, event: e?.title || id, college: e?.college || '', date: e?.when || r.at, attendees: r.attendees, description: r.description, drive: r.drive, by: r.by, filed: r.at }; });
+  const cur = state.listedEvents.find((e) => e.id === view);
   return (
     <>
-      <PageHead title="Events and RSVPs" sub="Every listed event with its RSVP count. RSVP still runs through the app. Assign events to colleges here." art="ok-orange" />
+      <PageHead title="Events and RSVPs" sub="Event listings from the in-site form, executed-event reports and RSVP counts. Everything downloads as CSV." art="ok-orange" />
       <div className="stack">
-        <Tabs value={tab} onChange={setTab} tabs={[{ id: 'all', label: 'All events' }, { id: 'review', label: `Listed by colleges (${state.listedEvents.length})` }, { id: 'assign', label: 'Assign event' }]} />
-        {tab === 'all' && <DataTable rows={rows} csv="events-rsvp.csv" cols={[{ key: 'title', label: 'Event' }, { key: 'type', label: 'Type' }, { key: 'city', label: 'City' }, { key: 'when', label: 'When', render: (r) => fmtFull(r.when) }, { key: 'rsvp', label: 'RSVPs', render: (r) => <span className="num">{r.rsvp} / {r.cap}</span> }, { key: 'fill', label: 'Fill', noCsv: true, render: (r) => <div style={{ width: 90 }}><Progress value={r.rsvp} max={r.cap} /></div> }]} />}
-        {tab === 'review' && (state.listedEvents.length ? state.listedEvents.map((e) => (
-          <div className="card row-between" key={e.id}><div><h3>{e.title}</h3><p className="dim small">{fmtFull(e.when)} · {e.where} · {e.city}</p></div><div className="row"><Tag tone={e.status === 'Approved' ? 'green' : e.status === 'Rejected' ? 'orange' : 'yellow'}>{e.status}</Tag><button className="btn btn-sm" onClick={() => { setEventStatus(e.id, 'Approved'); toast('Event approved'); }}>Approve</button><button className="btn btn-sm btn-ghost" onClick={() => setEventStatus(e.id, 'Rejected')}>Reject</button></div></div>
-        )) : <Empty title="No colleges have listed events yet" text="Events listed from the Fellow and HoO views show up here for review." />)}
+        <Tabs value={tab} onChange={setTab} tabs={[{ id: 'listings', label: `Event listings (${state.listedEvents.length})` }, { id: 'reports', label: `Executed reports (${reports.length})` }, { id: 'all', label: 'All events and RSVPs' }, { id: 'assign', label: 'Assign event' }]} />
+        {tab === 'listings' && (
+          listings.length ? (
+            <>
+              <DataTable rows={listings} csv="event-listings.csv" cols={[...listCols, { key: 'id', label: '', noCsv: true, render: (r) => <button className="btn btn-sm btn-ghost" onClick={() => setView(r.id)}>Review</button> }]} />
+            </>
+          ) : <Empty title="No colleges have listed events yet" text="Events submitted through the listing form show up here for review." />
+        )}
+        {tab === 'reports' && (reports.length ? <DataTable rows={reports} csv="executed-events.csv" cols={[{ key: 'event', label: 'Event' }, { key: 'college', label: 'College' }, { key: 'date', label: 'Date', render: (r) => fmtDate(r.date) }, { key: 'attendees', label: 'Attendees' }, { key: 'description', label: 'Description' }, { key: 'drive', label: 'Photos (Drive)', render: (r) => <a className="link" href={r.drive} target="_blank" rel="noreferrer noopener">Open</a> }, { key: 'by', label: 'Filed by' }]} /> : <Empty title="No executed events yet" text="Fellows and Heads of Operations file these after an event." />)}
+        {tab === 'all' && <DataTable rows={rows} csv="events-rsvp.csv" cols={[{ key: 'title', label: 'Event' }, { key: 'type', label: 'Type' }, { key: 'city', label: 'City' }, { key: 'when', label: 'When', render: (r) => fmtFull(r.when) }, { key: 'rsvp', label: 'RSVPs', render: (r) => (r.digital ? <span className="dim small">Google Calendar</span> : <span className="num">{r.rsvp} / {r.cap}</span>) }, { key: 'fill', label: 'Fill', noCsv: true, render: (r) => (r.digital ? null : <div style={{ width: 90 }}><Progress value={r.rsvp} max={r.cap} /></div>) }]} />}
         {tab === 'assign' && (
           <div className="split">
             <div className="card"><Form submitLabel="Assign event" fields={[{ name: 'event', label: 'Event to run', type: 'select', options: ['City meetup', 'Student talent hunt round', 'Academy session screening', 'Brand activation', 'Campus visit'], required: true }, { name: 'college', label: 'College', type: 'select', options: [...new Set(PEOPLE.map((p) => p.college))], required: true }, { name: 'date', label: 'Target date', type: 'date', required: true }, { name: 'note', label: 'Note', type: 'textarea' }]} onSubmit={(v, reset) => { addEventAssign(v); toast(`Assigned to ${v.college}`); reset(); }} /></div>
@@ -92,6 +107,19 @@ export function AdminEvents() {
           </div>
         )}
       </div>
+      <Modal open={!!cur} onClose={() => setView(null)} title={cur?.title || ''} wide>
+        {cur && (
+          <div className="stack">
+            <div className="stack-sm">
+              {Object.entries({ 'Submitted by': cur.form?.name, WhatsApp: cur.form?.whatsapp, College: `${cur.form?.college}, ${cur.form?.city}, ${cur.form?.state}`, Type: cur.form?.kind, When: fmtFull(cur.when), End: cur.form?.end, Venue: cur.where, 'Expected attendees': cur.cap, Tickets: `${cur.form?.ticketing}${cur.form?.price ? `, ₹${cur.form.price}` : ''}`, Poster: cur.form?.poster, About: cur.text }).map(([k, v]) => <div className="row-between" key={k} style={{ alignItems: 'flex-start' }}><span className="dim">{k}</span><b style={{ textAlign: 'right', maxWidth: '70%', overflowWrap: 'anywhere' }}>{v || '-'}</b></div>)}
+            </div>
+            <div className="row">
+              <button className="btn" disabled={cur.status === 'Approved'} onClick={() => { setEventStatus(cur.id, 'Approved'); toast('Approved. The event is live on the app.'); setView(null); }}>Approve and go live</button>
+              <button className="btn btn-ghost" disabled={cur.status === 'Rejected'} onClick={() => { setEventStatus(cur.id, 'Rejected'); setView(null); }}>Reject</button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </>
   );
 }

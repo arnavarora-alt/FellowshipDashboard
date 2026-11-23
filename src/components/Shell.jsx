@@ -4,8 +4,9 @@ import { AnimatePresence, motion } from 'motion/react';
 import Icon from './Icon';
 import Palette from './Palette';
 import { Avatar, Toasts } from './ui';
+import { CampusTag } from './extra';
 import RoleIntro from '../pages/RoleIntro';
-import { GROUPS, featureByPath, featuresFor } from '../data/features';
+import { GROUPS, featureByPath, featuresFor, groupFor } from '../data/features';
 import { ROLES } from '../data/roles';
 import { NOTIFICATIONS } from '../data/mock';
 import { useApp } from '../store/AppState';
@@ -14,7 +15,7 @@ import { logo, ART } from '../lib/assets';
 const pop = { initial: { opacity: 0, scale: 0.96, y: -6 }, animate: { opacity: 1, scale: 1, y: 0 }, exit: { opacity: 0, scale: 0.97 }, transition: { duration: 0.16, ease: [0.23, 1, 0.32, 1] } };
 
 export default function Shell() {
-  const { user, logout, introSeen, markIntro, resetDemo } = useApp();
+  const { user, logout, introSeen, markIntro, resetDemo, isPartner } = useApp();
   const loc = useLocation();
   const nav = useNavigate();
   const role = ROLES[user.role];
@@ -25,10 +26,10 @@ export default function Shell() {
   const [shut, setShut] = useState(() => (user.role === 'admin' ? { today: 1, campus: 1, content: 1, ops: 1, team: 1, learn: 1, involve: 1, support: 1 } : {}));
 
   const groups = useMemo(() => {
-    const feats = featuresFor(user.role);
-    const g = GROUPS.map((x) => ({ ...x, items: feats.filter((f) => f.group === x.id) })).filter((x) => x.items.length);
+    const feats = featuresFor(user.role).filter((f) => !f.hidden && !(f.needs === 'partner' && user.role !== 'admin' && !isPartner(user.college)));
+    const g = GROUPS.map((x) => ({ ...x, items: feats.filter((f) => groupFor(f, user.role) === x.id) })).filter((x) => x.items.length);
     return user.role === 'admin' ? [...g.filter((x) => x.id === 'start' || x.id === 'admin'), ...g.filter((x) => x.id !== 'start' && x.id !== 'admin')] : g;
-  }, [user.role]);
+  }, [user.role, user.college, isPartner]);
 
   useEffect(() => { setNavOpen(false); setMenu(null); window.scrollTo(0, 0); }, [loc.pathname]);
   useEffect(() => {
@@ -73,8 +74,8 @@ export default function Shell() {
         </nav>
         <div className="rail-stripe" />
         <div className="rail-foot">
-          <Avatar name={user.name} />
-          <div className="grow"><b>{user.name}</b><span>{user.college}</span></div>
+          <Avatar name={user.name} src={user.photo} />
+          <div className="grow"><b>{user.name}</b><span>{user.college}</span> <CampusTag college={user.college} /></div>
           <button className="btn btn-icon" onClick={logout} aria-label="Sign out"><Icon name="LogOut" size={18} /></button>
         </div>
       </aside>
@@ -91,7 +92,7 @@ export default function Shell() {
             <button className="btn btn-icon" aria-label="Notifications" onClick={() => setMenu(menu === 'bell' ? null : 'bell')} style={{ position: 'relative' }}>
               <Icon name="Bell" size={19} /><i className="bell-dot" />
             </button>
-            <button className="btn btn-icon" aria-label="Profile menu" onClick={() => setMenu(menu === 'user' ? null : 'user')}><Avatar name={user.name} size="sm" /></button>
+            <button className="btn btn-icon" aria-label="Profile menu" onClick={() => setMenu(menu === 'user' ? null : 'user')}><Avatar name={user.name} src={user.photo} size="sm" /></button>
             <AnimatePresence>
               {menu && <div style={{ position: 'fixed', inset: 0, zIndex: 55 }} onClick={() => setMenu(null)} />}
               {menu === 'bell' && (
