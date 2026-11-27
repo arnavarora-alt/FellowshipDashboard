@@ -1,7 +1,9 @@
 // Read an image file and shrink it so it fits comfortably in localStorage.
-export function readImage(file, max = 320, quality = 0.82) {
+export function readImage(file, max = 320, quality = 0.82, { jpegOnly = true, maxBytes = 3_000_000 } = {}) {
   return new Promise((resolve, reject) => {
-    if (!file || !file.type.startsWith('image/')) return reject(new Error('Choose an image file.'));
+    if (!file || !file.type.startsWith('image/')) return reject(new Error('Choose a JPG image.'));
+    if (jpegOnly && !/^image\/jpe?g$/i.test(file.type)) return reject(new Error('Only JPG photos are accepted. Save or export the photo as a JPG.'));
+    if (file.size > maxBytes) return reject(new Error(`That photo is ${(file.size / 1_000_000).toFixed(1)} MB. Pick one under ${Math.round(maxBytes / 1_000_000)} MB.`));
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {

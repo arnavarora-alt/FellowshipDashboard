@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Icon from '../components/Icon';
 import { Avatar, CheckItem, Chips, ExtLink, Form, Modal, PageHead, Progress, SectionTitle, Stat, Sticker, Tabs, Tag, Tilt } from '../components/ui';
-import { CampusTag, PdfViewer, PhotoPicker } from '../components/extra';
+import { CampusTag, PdfViewer } from '../components/extra';
 import { EventCard } from './Events';
 import { useApp, allEvents } from '../store/AppState';
 import { AWARDS, AWARD_STEPS, DRILLS, NOTION_HUB } from '../data/content';
@@ -109,8 +109,6 @@ export function Summit() {
   const members = 112;
   const ok = followers >= 1000 && members >= 100;
   const [open, setOpen] = useState(false);
-  const [photos, setPhotos] = useState([]);
-  const [photoErr, setPhotoErr] = useState('');
   const req = state.submissions.find((s) => s.type === 'summit-request' && s.userId === user.id);
   return (
     <>
@@ -136,13 +134,10 @@ export function Summit() {
             submitLabel="Send request"
             fields={SUMMIT_FORM}
             onSubmit={(v) => {
-              if (photos.length !== 3) { setPhotoErr('Upload exactly 3 photos of the auditorium.'); return; }
-              submit('summit-request', { college: user.college, requestedBy: user.name, ...v, photos }, 'Summit slot requested. Under25 will review it.');
-              setOpen(false); setPhotos([]); setPhotoErr('');
+              submit('summit-request', { college: user.college, requestedBy: user.name, ...v }, 'Summit slot requested. Under25 will review it.');
+              setOpen(false);
             }}
-            footer={<span className="tiny dim">Photos: {photos.length}/3</span>}
           />
-          <div className="field"><span className="label">Photos of the auditorium (3) *</span><PhotoPicker count={3} value={photos} onChange={(p) => { setPhotos(p); setPhotoErr(''); }} label="Add photos" />{photoErr && <span className="err" role="alert">{photoErr}</span>}</div>
         </div>
       </Modal>
     </>
@@ -151,11 +146,18 @@ export function Summit() {
 
 /* ------------------------------ College status (top of My campus) ------------------------------ */
 export function CollegeStatus() {
-  const { user, state } = useApp();
+  const { user, state, instagramFor } = useApp();
+  const ig = instagramFor(user.college);
+  const open = (u) => window.open(u, '_blank', 'noopener');
   const now = new Date();
   const mine = [...state.listedEvents.filter((e) => e.status === 'Approved'), ...EVENTS].filter((e) => e.college === user.college && e.type === 'On-ground');
   const upcoming = mine.filter((e) => new Date(e.when) >= now).sort((a, b) => new Date(a.when) - new Date(b.when));
   const recent = Object.entries(state.reports).map(([id, r]) => ({ id, r, e: [...EVENTS, ...state.listedEvents].find((x) => x.id === id) })).filter((x) => x.e && x.e.college === user.college);
+  const happening = [
+    ...upcoming.slice(0, 2).map((e) => ({ k: e.id, t: e.title, d: `${fmtDate(e.when, { weekday: 'short', day: 'numeric', month: 'short' })} · ${e.where}` })),
+    ...recent.slice(0, 2).map((x) => ({ k: `r-${x.id}`, t: `${x.e.title} wrapped`, d: `${x.r.attendees} people came` })),
+    { k: 'club', t: 'Club page is posting', d: 'Followers up 120 this month' },
+  ].slice(0, 4);
   return (
     <>
       <PageHead title="College status" sub={`Where ${user.college} stands right now, and what to do next.`} art="shapes-green" />
@@ -170,19 +172,43 @@ export function CollegeStatus() {
         </div>
 
         <SectionTitle>Highlights</SectionTitle>
-        <div>
-          <h4 style={{ marginBottom: 10 }}>Recent event pictures</h4>
-          <div className="grid g4">
-            {recent.map(({ id, r, e }) => (
-              <div className="photo-tile tone-green" key={id}><img src={ART['trophy-yellow']} alt="" /><div className="cap"><b>{e.title}</b>{r.attendees} came · <a href={r.drive} target="_blank" rel="noreferrer noopener" style={{ textDecoration: 'underline' }}>photos</a></div></div>
-            ))}
-            {!recent.length && <p className="dim small">Photos appear here when you file an event report with a Drive link.</p>}
-          </div>
+        <div className="grid g3">
+          <Tilt className="solid-yellow" onClick={() => open(ig)} max={5}>
+            <div className="lift">
+              <span className="tag tag-ink"><Icon name="Instagram" size={12} /> What is happening on campus</span>
+              <div className="stack-sm" style={{ marginTop: 14 }}>
+                {happening.map((h) => <div key={h.k} className="row" style={{ gap: 10, flexWrap: 'nowrap' }}><span className="dot orange" style={{ flex: 'none' }} /><span><b>{h.t}</b><span className="tiny" style={{ display: 'block', opacity: 0.75 }}>{h.d}</span></span></div>)}
+              </div>
+              <span className="spot-cta" style={{ marginTop: 16 }}>See it on Instagram <Icon name="ArrowUpRight" size={15} /></span>
+            </div>
+          </Tilt>
+          <Tilt className="solid-purple" onClick={() => open(recent[0]?.r.instagram || ig)} max={5}>
+            <div className="lift">
+              <span className="tag tag-ink"><Icon name="Sparkles" size={12} /> Highlights</span>
+              <div className="hl-thumbs">
+                {(recent.length ? recent : [null, null, null]).slice(0, 3).map((x, i) => (
+                  x?.r.cover ? <img key={i} className="hl-img" src={x.r.cover} alt="" /> : <span key={i} className={`hl-img hl-${i}`}><img src={ART[['trophy-yellow', 'ok-orange', 'shapes-green'][i]]} alt="" /></span>
+                ))}
+              </div>
+              <p className="small" style={{ marginTop: 10, opacity: 0.88 }}>{recent.length ? `${recent[0].e.title}: ${recent[0].r.attendees} people came.` : 'Recent event pictures show up here after an event report.'}</p>
+              <span className="spot-cta" style={{ marginTop: 14 }}>Open the post <Icon name="ArrowUpRight" size={15} /></span>
+            </div>
+          </Tilt>
+          <Tilt className="solid-orange" onClick={() => open(ig)} max={5}>
+            <div className="lift">
+              <span className="tag tag-ink"><Icon name="CalendarDays" size={12} /> Upcoming event</span>
+              {upcoming[0] ? (
+                <>
+                  <h3 style={{ fontSize: 28, margin: '14px 0 6px' }}>{upcoming[0].title}</h3>
+                  <p className="small" style={{ opacity: 0.85 }}>{fmtFull(upcoming[0].when)} · {upcoming[0].where}</p>
+                  <p className="small" style={{ marginTop: 8, opacity: 0.85 }}>{upcoming[0].text}</p>
+                </>
+              ) : <p style={{ marginTop: 14 }}>Nothing is listed yet. List an event and it shows up here.</p>}
+              <span className="spot-cta" style={{ marginTop: 16 }}>Follow on Instagram <Icon name="ArrowUpRight" size={15} /></span>
+            </div>
+          </Tilt>
         </div>
-        <div>
-          <h4 style={{ margin: '14px 0 10px' }}>Upcoming event</h4>
-          {upcoming[0] ? <div style={{ maxWidth: 620 }}><EventCard e={upcoming[0]} /></div> : <div className="card dim">Nothing is listed yet. <Link className="link" to="/listevent">List an event</Link></div>}
-        </div>
+        <p className="tiny dim">Every block opens your campus’s Instagram page.</p>
       </div>
     </>
   );

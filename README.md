@@ -68,20 +68,24 @@ then a mission briefing. It can be replayed from the profile menu.
 
 ## Home
 
-Every Home opens with the greeting, then a **Spotlight** carousel of pinned banners (modelled on the Under25 app): next digital
+Every Home opens with the greeting, then big colour **standing tiles** (a Fellow sees followers, core team built, events run and unlocks
+earned, with progress and the current semester), then a **Spotlight** carousel of pinned banners (modelled on the Under25 app): next digital
 sessions, upcoming community events, MVPs of the month (Instagram link), community standouts, challenge of the month. Admins manage
 the banners under **Spotlight banners**. Below: stats, quick actions, tasks, coming up, what other campuses are hosting, Campus
-Partners, photos from recent events, and What's new.
+Partners (tap one to meet its Fellow, Head of Content and Head of Operations), RSVP links to the Under25 app, photos from recent events that
+open Instagram, and a coloured, clickable What's new.
 
 ## Events and forms
 
 - **RSVPs.** On-ground events: only community members RSVP. Digital sessions (Weekly Hang Session, Draft Room, Townhall, Academy):
   everyone RSVPs on Google Calendar. City meetups and the talent hunt: RSVP in the app.
-- **Executed events.** Fellows and Heads of Operations mark an on-ground event executed with attendees, a description and a Drive
-  link to photos. It only counts as executed once that report is filed.
+- **Executed events.** Fellows and Heads of Operations mark an on-ground event executed with attendees, a description, a Drive
+  link to all the photos, an Instagram post link and one small cover JPG. It only counts as executed once that report is filed.
+- **No photo uploads.** Photos are not stored on the dashboard. Teams share Drive links (all collected in the admin *Drive links sheet*,
+  CSV download) plus one limited-size JPG per event for Home. Fresh from campus tiles open the campus's Instagram post.
 - **List an event** is an in-site form (page 1 mirrors the Under25 Google Form). Admin reviews it under *Events and RSVPs*; approving
   makes it live. Every form on the site shows under *Form submissions* with a CSV download (opens in Excel).
-- Other in-site forms: Summit slot request (with 3 auditorium photos), club page login (Fellow task, admin-only log), Campus Agreement
+- Other in-site forms: Summit slot request (with a Drive link to auditorium photos), club page login (Fellow task, admin-only log), Campus Agreement
   upload, monthly insight form (a mandatory task on the 25th for Fellows and Heads of Operations), successor nomination, Campus
   Awards nomination (opens in March).
 - **Campus Agreement.** A Fellow uploads the signed agreement; on admin approval the college gets a **Campus Partner** tag shown to

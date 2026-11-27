@@ -16,20 +16,20 @@ export function CampusTag({ college, small = true }) {
 }
 
 /* Photo picker: shrinks images and returns data URLs */
-export function PhotoPicker({ value = [], onChange, count = 1, label = 'Choose photo', hint }) {
+export function PhotoPicker({ value = [], onChange, count = 1, label = 'Choose photo', hint, max = 320 }) {
   const ref = useRef(null);
   const [err, setErr] = useState('');
   const pick = async (files) => {
     setErr('');
     try {
       const list = [...files].slice(0, count);
-      const out = await Promise.all(list.map((f) => readImage(f, count > 1 ? 560 : 320)));
+      const out = await Promise.all(list.map((f) => readImage(f, max, 0.7)));
       onChange(count > 1 ? [...value, ...out].slice(0, count) : out);
     } catch (e) { setErr(e.message); }
   };
   return (
     <div className="stack-sm">
-      <input ref={ref} type="file" accept="image/*" multiple={count > 1} hidden onChange={(e) => { pick(e.target.files); e.target.value = ''; }} />
+      <input ref={ref} type="file" accept="image/jpeg" multiple={count > 1} hidden onChange={(e) => { pick(e.target.files); e.target.value = ''; }} />
       <div className="row" style={{ gap: 10 }}>
         {value.map((v, i) => (
           <span key={i} style={{ position: 'relative' }}>
@@ -73,6 +73,32 @@ export function PdfViewer({ src, title, height = '78vh' }) {
         {url && <a className="btn btn-sm btn-ghost" href={url} target="_blank" rel="noreferrer noopener"><Icon name="ExternalLink" size={15} /> Open in a new tab</a>}
       </div>
       {url ? <iframe title={title} src={url} style={{ width: '100%', height, border: 0, borderRadius: 16, background: 'var(--white)' }} /> : <div className="card empty">Loading…</div>}
+    </div>
+  );
+}
+
+/* Scales its content down to fit the available width, so wide charts need no sideways scrolling. */
+export function FitBox({ children, min = 0.42 }) {
+  const wrap = useRef(null);
+  const inner = useRef(null);
+  const [fit, setFit] = useState({ s: 1, h: undefined });
+  useEffect(() => {
+    const measure = () => {
+      if (!wrap.current || !inner.current) return;
+      const w = wrap.current.clientWidth;
+      const n = inner.current.scrollWidth;
+      const s = Math.max(min, Math.min(1, w / n));
+      setFit({ s, h: inner.current.scrollHeight * s });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(wrap.current);
+    window.addEventListener('resize', measure);
+    return () => { ro.disconnect(); window.removeEventListener('resize', measure); };
+  }, [min]);
+  return (
+    <div ref={wrap} style={{ width: '100%', height: fit.h, overflowX: fit.s <= min ? 'auto' : 'hidden', overflowY: 'hidden' }}>
+      <div ref={inner} style={{ width: 'max-content', transform: `scale(${fit.s})`, transformOrigin: 'top left' }}>{children}</div>
     </div>
   );
 }

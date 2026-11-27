@@ -37,7 +37,6 @@ const rows = [
   ['campusagreement', '/campusagreement', 'Campus Agreement', 'FileSignature', 'campus', 'F', 'Get management to sign and become a Campus Partner'],
   ['partnernext', '/partnernext', 'Campus Partner next steps', 'BadgeCheck', 'campus', 'F', 'Your college’s next steps', { needs: 'partner' }],
   ['recruitment', '/recruitment', 'Club recruitment', 'UsersRound', 'campus', 'F', 'Roles, applications and interviews'],
-  ['uploadphotos', '/uploadphotos', 'Upload photos', 'Camera', 'campus', 'FT', 'Share event photos with Under25'],
   ['credform', '/clubcredentials', 'Club page login', 'KeyRound', 'campus', 'F', 'Share your club page login with Under25', { hidden: true }],
 
   ['events', '/events', 'Upcoming events', 'CalendarDays', 'today', all, 'Events and digital sessions'],
@@ -82,6 +81,7 @@ const rows = [
   ['applications', '/applications', 'Fellowship applications', 'UserCheck', 'admin', '', 'Accept, reject, interview'],
   ['adminevents', '/adminevents', 'Events and RSVPs', 'CalendarCheck', 'admin', '', 'Event listings, executed reports, RSVPs, CSV'],
   ['submissions', '/submissions', 'Form submissions', 'Inbox', 'admin', '', 'Every form filled on the site, with CSV'],
+  ['drivelinks', '/drivelinks', 'Drive links sheet', 'Link2', 'admin', '', 'Every event and summit Drive link in one sheet'],
   ['credentials', '/credentials', 'Credentials log', 'KeyRound', 'admin', '', 'Club page logins from every Fellow'],
   ['agreements', '/agreements', 'Campus agreements', 'FileSignature', 'admin', '', 'Approve signed agreements, grant Campus Partner'],
   ['spotlightadmin', '/spotlightadmin', 'Spotlight banners', 'Sparkles', 'admin', '', 'Manage the banners pinned on Home'],

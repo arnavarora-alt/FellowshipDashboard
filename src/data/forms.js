@@ -25,7 +25,8 @@ export const EVENT_FORM = [
 export const EXECUTED_FORM = [
   { name: 'attendees', label: 'How many people attended?', type: 'number', required: true },
   { name: 'description', label: 'What happened at the event?', type: 'textarea', required: true },
-  { name: 'drive', label: 'Drive link to the event photos', required: true, placeholder: 'https://drive.google.com/…' },
+  { name: 'drive', label: 'Drive link with all the event photos', required: true, placeholder: 'https://drive.google.com/…' },
+  { name: 'instagram', label: 'Instagram post link (shown on Home, people are sent here)', required: true, placeholder: 'https://www.instagram.com/p/…' },
 ];
 
 export const SUMMIT_FORM = [
@@ -34,6 +35,7 @@ export const SUMMIT_FORM = [
   { name: 'capacity', label: 'Auditorium capacity', type: 'number', required: true },
   { name: 'setting', label: 'Auditorium: indoor or outdoor', type: 'select', options: ['Indoor', 'Outdoor'], required: true },
   { name: 'ticketing', label: 'Ticketed or unticketed summit', type: 'select', options: ['Ticketed summit', 'Unticketed summit'], required: true },
+  { name: 'drive', label: 'Drive link with photos of the auditorium', required: true, placeholder: 'https://drive.google.com/…' },
 ];
 
 export const CRED_FORM = [

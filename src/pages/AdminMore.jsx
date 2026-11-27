@@ -4,7 +4,7 @@ import { Avatar, DataTable, Empty, Form, Modal, PageHead, SectionTitle, Stat, Ta
 import { CampusTag } from '../components/extra';
 import { APPROVER_TEXT, canApprove, useApp } from '../store/AppState';
 import { download, fmtDate, fmtFull, relDay, toCSV } from '../lib/utils';
-import { PARTNERS } from '../data/mock';
+import { EVENTS, PARTNERS } from '../data/mock';
 
 const ROLE_LABEL = { fellow: 'Fellow', hoc: 'Head of Content', hoo: 'Head of Operations', core: 'Core team member', community: 'Community member' };
 const ROLE_TONE = { fellow: 'yellow', hoc: 'purple', hoo: 'orange', core: 'green', community: '' };
@@ -185,6 +185,27 @@ export function SpotlightAdmin() {
           {state.spotlight.map((b) => <div className="list-row" key={b.id}><span className={`avatar tone-${b.tone === 'ink' ? 'green' : b.tone}`} style={{ color: b.tone === 'purple' || b.tone === 'green' ? 'var(--white)' : 'var(--ink)' }}><Icon name="Sparkles" size={18} /></span><div className="grow"><b>{b.title}</b><p className="dim small">{b.kind}</p></div><button className="btn btn-icon" style={{ width: 34, height: 34 }} aria-label={`Remove ${b.title}`} onClick={() => removeSpotlight(b.id)}><Icon name="X" size={16} /></button></div>)}
           {!state.spotlight.length && <p className="dim">Nothing pinned.</p>}
         </div>
+      </div>
+    </>
+  );
+}
+
+/* ---------------- Drive links sheet: every Drive link in one place ---------------- */
+export function DriveLinks() {
+  const { state, everyone } = useApp();
+  const who = (id) => everyone.find((u) => u.id === id)?.name || id || '';
+  const rows = useMemo(() => {
+    const ev = Object.entries(state.reports).map(([id, r]) => ({ id: 'r-' + id, type: 'Event photos', college: [...EVENTS, ...state.listedEvents].find((e) => e.id === id)?.college || '', context: [...EVENTS, ...state.listedEvents].find((e) => e.id === id)?.title || id, link: r.drive, by: r.by, at: r.at }));
+    const sm = state.submissions.filter((s) => s.type === 'summit-request' && s.data.drive).map((s) => ({ id: s.id, type: 'Summit auditorium photos', college: s.data.college, context: 'Summit at Campus slot request', link: s.data.drive, by: who(s.userId), at: s.at }));
+    return [...ev, ...sm].sort((a, b) => new Date(b.at) - new Date(a.at));
+  }, [state, everyone]);
+  const cols = [{ key: 'type', label: 'Type' }, { key: 'college', label: 'College' }, { key: 'context', label: 'Event or request' }, { key: 'link', label: 'Drive link', render: (r) => <a className="link" href={r.link} target="_blank" rel="noreferrer noopener">Open</a> }, { key: 'by', label: 'Shared by' }, { key: 'at', label: 'Date', render: (r) => fmtDate(r.at) }];
+  return (
+    <>
+      <PageHead title="Drive links sheet" sub="Every Drive link shared on the site, in one sheet: event photos from executed-event reports and auditorium photos from Summit requests." art="shapes-green" />
+      <div className="stack">
+        <div className="callout"><Icon name="Link2" /><p className="small">Photos are not stored on the dashboard. Teams share Drive links instead, plus one small JPG cover photo per event for Home.</p></div>
+        <DataTable rows={rows} cols={cols} csv="drive-links.csv" empty="No Drive links yet. They appear when an event is marked executed." />
       </div>
     </>
   );

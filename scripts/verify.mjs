@@ -17,11 +17,11 @@ for (const k of ['journey', 'help', 'team', 'branded', 'challenges']) {
 // Assign task: Fellow, HoC, HoO (and admin)
 ok(['fellow', 'hoc', 'hoo', 'admin'].every((r) => canAccess(r, 'assigntask')) && !canAccess('core', 'assigntask') && !canAccess('community', 'assigntask'), 'assigntask: fellow, hoc, hoo, admin only');
 ok(FEATURES.every((f) => f.roles.includes('admin')), 'admin can access every feature');
-for (const k of ['database', 'applications', 'adminevents', 'submissions', 'credentials', 'agreements', 'spotlightadmin', 'leadership', 'calls', 'health', 'analytics', 'programcal', 'docs']) {
+for (const k of ['database', 'applications', 'adminevents', 'submissions', 'credentials', 'drivelinks', 'agreements', 'spotlightadmin', 'leadership', 'calls', 'health', 'analytics', 'programcal', 'docs']) {
   ok(FEATURES.find((f) => f.key === k).roles.join() === 'admin', `${k}: admin only`);
 }
 // Tabs that were removed
-for (const k of ['citymeetups', 'deadlines', 'checklists', 'eventguide', 'sessions', 'agreement']) ok(!keys.includes(k), `${k}: removed`);
+for (const k of ['citymeetups', 'deadlines', 'checklists', 'eventguide', 'sessions', 'agreement', 'uploadphotos']) ok(!keys.includes(k), `${k}: removed`);
 // Fellow-only content
 for (const k of ['playbook', 'drills', 'awards']) ok(['fellow', 'admin'].every((r) => canAccess(r, k)) && !['hoc', 'hoo', 'core', 'community'].some((r) => canAccess(r, k)), `${k}: Fellow only (plus admin)`);
 ok(canAccess('fellow', 'credform') && !['hoc', 'hoo', 'core', 'community'].some((r) => canAccess(r, 'credform')), 'club page login form: Fellow only');

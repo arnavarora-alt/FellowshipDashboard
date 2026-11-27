@@ -8,26 +8,26 @@ import { PageHead } from './components/ui';
 import Home from './pages/Home';
 import { Updates, UpcomingEvents, OnGround, ListEvent, PlanEvent, TalentHunt } from './pages/Events';
 import { Tasks, AssignTask } from './pages/Tasks';
-import { Join, Involve, Suggestions, Certificates, Nominate, UploadPhotos, Insight, QnA, Alumni } from './pages/Community';
+import { Join, Involve, Suggestions, Certificates, Nominate, Insight, QnA, Alumni } from './pages/Community';
 import { Team, Structure, Journey, Milestones, Challenges, Branded, Help } from './pages/Leadership';
 import { ClubPage, Hygiene, ContentIdeas, ContentCal, ClubResources, ContentGuide, DraftRoom, WeeklyHang } from './pages/Club';
 import { EventStats, EventIdeas, EventCal } from './pages/Ops';
 import { Playbook, Drills, Awards, Summit, CollegeStatus, Recruitment, CredForm, CampusAgreement, PartnerNext } from './pages/Fellow';
-import { Approvals, SubmissionsAdmin, Credentials, Agreements, SpotlightAdmin } from './pages/AdminMore';
+import { Approvals, SubmissionsAdmin, DriveLinks, Credentials, Agreements, SpotlightAdmin } from './pages/AdminMore';
 import Signup, { Mailbox } from './pages/Signup';
 import { Database, Applications, AdminEvents, Leadership, Calls, Health, Analytics, ProgramCal, Docs } from './pages/Admin';
 
 const PAGES = {
   home: Home, updates: Updates, events: UpcomingEvents, tasks: Tasks, assigntask: AssignTask, approvals: Approvals,
   collegestatus: CollegeStatus, clubpage: ClubPage, hygiene: Hygiene, onground: OnGround, listevent: ListEvent, planevent: PlanEvent, summit: Summit,
-  awards: Awards, campusagreement: CampusAgreement, partnernext: PartnerNext, recruitment: Recruitment, credform: CredForm, uploadphotos: UploadPhotos,
+  awards: Awards, campusagreement: CampusAgreement, partnernext: PartnerNext, recruitment: Recruitment, credform: CredForm,
   contentideas: ContentIdeas, contentcal: ContentCal, clubresources: ClubResources, contentguide: ContentGuide, draftroom: DraftRoom,
   eventstats: EventStats, eventideas: EventIdeas, eventcal: EventCal,
   team: Team, structure: Structure, journey: Journey, milestones: Milestones, challenges: Challenges, branded: Branded,
   insight: Insight, nominate: Nominate, alumni: Alumni,
   playbook: Playbook, drills: Drills, weeklyhang: WeeklyHang, qna: QnA,
   join: Join, involve: Involve, talenthunt: TalentHunt, suggestions: Suggestions, certificates: Certificates, help: Help,
-  database: Database, applications: Applications, adminevents: AdminEvents, submissions: SubmissionsAdmin, credentials: Credentials,
+  database: Database, applications: Applications, adminevents: AdminEvents, submissions: SubmissionsAdmin, drivelinks: DriveLinks, credentials: Credentials,
   agreements: Agreements, spotlightadmin: SpotlightAdmin, leadership: Leadership, calls: Calls,
   health: Health, analytics: Analytics, programcal: ProgramCal, docs: Docs,
 };

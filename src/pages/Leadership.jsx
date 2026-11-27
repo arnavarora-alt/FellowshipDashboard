@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import Icon from '../components/Icon';
 import { Avatar, Chips, ExtLink, Form, Modal, PageHead, Progress, SectionTitle, Stat, Sticker, Tabs, Tag, Tilt } from '../components/ui';
-import { PhotoPicker } from '../components/extra';
+import { FitBox, PhotoPicker } from '../components/extra';
 import { useApp } from '../store/AppState';
 import { CARE_TEAM, CURRENT_SEM, INCENTIVES, JOURNEY, PLAQUE, ROLE_BLURBS, STRUCTURE } from '../data/content';
 import { BRANDED, CHALLENGES, TEAM_MEMBERS } from '../data/mock';
@@ -65,7 +65,8 @@ export function Structure() {
   return (
     <>
       <PageHead title="Team structure" sub="Your club at a glance. Every role shows a photo above its title. Tap a role to see what it does or add a photo." art="shapes-orange" />
-      <div className="card" style={{ overflowX: 'auto' }}>
+      <div className="card">
+        <FitBox>
         <div className="org tree">
           <ul>
             <li>
@@ -98,6 +99,7 @@ export function Structure() {
             <div className="org-total big"><Icon name="UsersRound" size={26} /> <b>Total strength = {S.totals.strength}+</b></div>
           </div>
         </div>
+        </FitBox>
       </div>
       <Modal open={!!cur} onClose={() => setSel(null)} title={cur?.title || ''}>
         {cur && (

@@ -1,7 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { USERS } from '../data/roles';
 import { APPROVER_TEXT, canApprove } from '../lib/approvals';
-import { TASKS, APPLICATIONS, EVENTS, SEED_SIGNUPS, SEED_REPORTS, SEED_AGREEMENTS, SEED_CRED, SPOTLIGHT_SEED, PARTNERS } from '../data/mock';
+import { TASKS, APPLICATIONS, EVENTS, SEED_SIGNUPS, SEED_REPORTS, SEED_AGREEMENTS, SEED_CRED, SPOTLIGHT_SEED, PARTNERS, PARTNER_LEADERS, PEOPLE } from '../data/mock';
+import { instagramUrl } from '../data/links';
 
 const KEY = 'u25.dashboard.v2';
 const fresh = () => ({
@@ -20,7 +21,8 @@ const fresh = () => ({
   credentials: SEED_CRED,
   agreements: SEED_AGREEMENTS,
   spotlight: SPOTLIGHT_SEED,
-  photos: {}, // uploaded photos keyed by structure node / person
+  photos: {}, // single profile photos keyed by structure node / person
+  handles: {}, // public club page handle per college (from the Fellow's login form)
   eventAssign: [],
 });
 
@@ -158,9 +160,23 @@ export function AppProvider({ children }) {
       addEventAssign: (a) => setState((s) => ({ ...s, eventAssign: [{ ...a, id: `ea${Date.now()}` }, ...s.eventAssign] })),
 
       /* ----- credentials, agreements, photos, spotlight ----- */
-      saveCredential: (c) => setState((s) => ({ ...s, credentials: [{ ...c, id: `k${Date.now()}`, at: new Date().toISOString() }, ...s.credentials.filter((x) => x.userId !== c.userId)] })),
+      saveCredential: (c) => setState((s) => ({ ...s, handles: { ...s.handles, [c.college]: c.handle }, credentials: [{ ...c, id: `k${Date.now()}`, at: new Date().toISOString() }, ...s.credentials.filter((x) => x.userId !== c.userId)] })),
       submitAgreement: (a) => setState((s) => ({ ...s, agreements: [{ ...a, id: `ag${Date.now()}`, status: 'pending', at: new Date().toISOString() }, ...s.agreements.filter((x) => x.college !== a.college)] })),
       setAgreementStatus: (id, status) => setState((s) => ({ ...s, agreements: s.agreements.map((a) => (a.id === id ? { ...a, status } : a)) })),
+      instagramFor: (college) => instagramUrl(state.handles[college] || PARTNER_LEADERS[college]?.fellow?.handle),
+      leadersOf(college) {
+        const find = (role, label) => {
+          const a = everyone.find((u) => u.role === role && u.college === college);
+          if (a) return { name: a.name, email: a.email, photo: a.photo || state.photos[`node:${role}`] };
+          const seeded = PARTNER_LEADERS[college]?.[role];
+          if (seeded) return seeded;
+          const p = PEOPLE.find((x) => x.college === college && x.role === label);
+          return p ? { name: p.name, email: p.email } : null;
+        };
+        const fellow = find('fellow', 'Fellow');
+        if (fellow && !fellow.handle) fellow.handle = state.handles[college] || PARTNER_LEADERS[college]?.fellow?.handle;
+        return { fellow, hoc: find('hoc', 'Head of Content'), hoo: find('hoo', 'Head of Operations') };
+      },
       isPartner: (college) => PARTNERS.includes(college) || state.agreements.some((a) => a.college === college && a.status === 'approved'),
       setPhoto: (key, data) => setState((s) => ({ ...s, photos: { ...s.photos, [key]: data } })),
       addSpotlight: (b) => setState((s) => ({ ...s, spotlight: [{ ...b, id: `sp${Date.now()}` }, ...s.spotlight] })),

@@ -174,39 +174,6 @@ export function Nominate() {
   );
 }
 
-export function UploadPhotos() {
-  const { submit } = useApp();
-  const [files, setFiles] = useState([]);
-  const [event, setEvent] = useState('');
-  const input = useRef(null);
-  const add = (list) => setFiles((f) => [...f, ...[...list].filter((x) => x.type.startsWith('image/')).map((x) => ({ name: x.name, url: URL.createObjectURL(x) }))].slice(0, 24));
-  return (
-    <>
-      <PageHead title="Upload photos" sub="Candid beats posed. Share event photos so Under25 can feature your campus." art="shapes-green" />
-      <div className="stack">
-        <div className="card" onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); add(e.dataTransfer.files); }} style={{ borderStyle: 'dashed', borderWidth: 2, textAlign: 'center', padding: 36 }}>
-          <Icon name="Upload" size={34} />
-          <h3 style={{ margin: '10px 0 4px' }}>Drop photos here</h3>
-          <p className="dim small" style={{ marginBottom: 14 }}>or choose them from your device. Previews stay on your device in this demo.</p>
-          <input ref={input} type="file" accept="image/*" multiple hidden onChange={(e) => add(e.target.files)} />
-          <button className="btn" onClick={() => input.current?.click()}>Choose photos</button>
-        </div>
-        {files.length > 0 && (
-          <div className="card stack">
-            <div className="grid g4">{files.map((f, i) => (
-              <div key={f.url} style={{ position: 'relative' }}><img src={f.url} alt={f.name} style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: 12 }} />
-                <button className="btn btn-icon" aria-label={`Remove ${f.name}`} style={{ position: 'absolute', top: 6, right: 6, width: 30, height: 30 }} onClick={() => setFiles((x) => x.filter((_, j) => j !== i))}><Icon name="X" size={14} /></button></div>))}</div>
-            <div className="form-grid">
-              <div className="field"><label htmlFor="ev">Which event?</label><select id="ev" className="select" value={event} onChange={(e) => setEvent(e.target.value)}><option value="">Choose one</option>{EVENTS.filter((e) => e.type !== 'Session').map((e) => <option key={e.id}>{e.title}</option>)}</select></div>
-            </div>
-            <div><button className="btn" disabled={!event} onClick={() => { submit('photos', { event, count: files.length }, `${files.length} photo${files.length > 1 ? 's' : ''} sent to Under25.`); setFiles([]); setEvent(''); }}>Send {files.length} photo{files.length > 1 ? 's' : ''}</button></div>
-          </div>
-        )}
-      </div>
-    </>
-  );
-}
-
 export function Insight() {
   const { submit, flag, setFlag, user } = useApp();
   const ins = monthlyInsight(new Date(), user, { flags: {} });

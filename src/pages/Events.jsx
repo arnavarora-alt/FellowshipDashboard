@@ -3,27 +3,34 @@ import { useSearchParams } from 'react-router-dom';
 import Icon from '../components/Icon';
 import { Chips, Empty, Form, Modal, PageHead, Progress, SectionTitle, Stat, Tabs, Tag, Tilt } from '../components/ui';
 import { RsvpAction, canRsvpInApp } from '../components/Rsvp';
-import { CampusTag } from '../components/extra';
+import { CampusTag, PhotoPicker } from '../components/extra';
 import { EVENT_FORM, EXECUTED_FORM } from '../data/forms';
+import { canAccess, featureByPath } from '../data/features';
 import { useApp, allEvents } from '../store/AppState';
 import { CITIES, EVENTS, TALENT, UPDATES } from '../data/mock';
 import { fmtFull, fmtDate, monthDay, relDay } from '../lib/utils';
 
 export function Updates() {
+  const { user } = useApp();
   const [tag, setTag] = useState('');
   const tags = [...new Set(UPDATES.map((u) => u.tag))];
+  const tones = ['yellow', 'orange', 'purple', 'green'];
+  const safe = (href) => { const p = featureByPath[(href || '').split('?')[0]]; return p && canAccess(user.role, p.key) ? href : '/updates'; };
   const list = UPDATES.filter((u) => !tag || u.tag === tag).sort((a, b) => (b.pin ? 1 : 0) - (a.pin ? 1 : 0) || new Date(b.when) - new Date(a.when));
   return (
     <>
-      <PageHead title="What’s new" sub="Community updates from Under25 and your campus, newest first." art="arrow-yellow" />
+      <PageHead title="What’s new" sub="Community updates from Under25 and your campus, newest first. Tap one to jump to it." art="arrow-yellow" />
       <Chips options={tags} value={tag} onChange={setTag} />
-      <div className="stack" style={{ marginTop: 18 }}>
-        {list.map((u) => (
-          <article className="card" key={u.id}>
-            <div className="row-between"><div className="row"><Tag tone={u.pin ? 'yellow' : 'soft'}>{u.pin ? 'Pinned' : u.tag}</Tag><span className="dim small">{relDay(u.when)}</span></div></div>
-            <h3 style={{ fontSize: 24, margin: '10px 0 4px' }}>{u.title}</h3>
-            <p className="dim" style={{ maxWidth: '70ch' }}>{u.text}</p>
-          </article>
+      <div className="grid g2" style={{ marginTop: 18 }}>
+        {list.map((u, i) => (
+          <Tilt key={u.id} to={safe(u.href)} className={`solid-${tones[i % 4]}`} max={4}>
+            <div className="lift">
+              <div className="row" style={{ gap: 8 }}><span className="tag tag-ink">{u.pin ? 'Pinned' : u.tag}</span><span className="tiny" style={{ opacity: 0.8 }}>{relDay(u.when)}</span></div>
+              <h3 style={{ fontSize: 26, margin: '10px 0 4px' }}>{u.title}</h3>
+              <p style={{ maxWidth: '60ch', opacity: 0.88 }}>{u.text}</p>
+              <span className="spot-cta" style={{ marginTop: 14 }}>Open <Icon name="ArrowRight" size={15} /></span>
+            </div>
+          </Tilt>
         ))}
         {!list.length && <Empty title="Nothing here yet" />}
       </div>
@@ -33,6 +40,8 @@ export function Updates() {
 
 export function ExecuteModal({ e, onClose }) {
   const { user, saveReport, submit } = useApp();
+  const [cover, setCover] = useState([]);
+  const [coverErr, setCoverErr] = useState('');
   return (
     <Modal open={!!e} onClose={onClose} title="Mark event as executed">
       {e && (
@@ -42,12 +51,15 @@ export function ExecuteModal({ e, onClose }) {
             submitLabel="Mark as executed"
             fields={EXECUTED_FORM}
             onSubmit={(v) => {
-              const report = { attendees: Number(v.attendees), description: v.description, drive: v.drive, by: user.name, at: new Date().toISOString() };
+              if (!cover.length) { setCoverErr('Add one cover photo (JPG) for the dashboard.'); return; }
+              const report = { attendees: Number(v.attendees), description: v.description, drive: v.drive, instagram: v.instagram, cover: cover[0], by: user.name, at: new Date().toISOString() };
               saveReport(e.id, report);
-              submit('event-report', { event: e.title, college: e.college || user.college, date: e.when.slice(0, 10), ...report }, 'Event marked as executed.');
+              submit('event-report', { event: e.title, college: e.college || user.college, date: e.when.slice(0, 10), attendees: report.attendees, description: report.description, drive: report.drive, instagram: report.instagram, by: user.name }, 'Event marked as executed.');
+              setCover([]); setCoverErr('');
               onClose();
             }}
           />
+          <div className="field"><span className="label">One cover photo for the dashboard (JPG) *</span><PhotoPicker value={cover} onChange={(p) => { setCover(p); setCoverErr(''); }} max={640} label="Add cover photo" hint="One JPG only. It is shrunk to a small size. All other photos go in the Drive link." />{coverErr && <span className="err" role="alert">{coverErr}</span>}</div>
         </div>
       )}
     </Modal>

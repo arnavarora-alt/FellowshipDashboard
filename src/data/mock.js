@@ -77,7 +77,7 @@ export const TASKS = [
   { id: 't-hoo-check', title: 'Finalise the Club Orientation checklist', text: 'Venue, sound, check-in desk, volunteers, first-aid.', assignee: 'hoo-bnmit', due: inDays(2), status: 'doing', by: 'Ananya Rao', priority: 'High' },
   { id: 't-hoo-partner', title: 'Collect 3 sponsor leads', text: 'With the Brand Lead. Keep proof for brand payouts.', assignee: 'hoo-bnmit', due: inDays(9), status: 'todo', by: 'Ananya Rao', priority: 'Low' },
   { id: 't-core-first', title: 'Introduce yourself to your lead team', text: 'Say who you are and which first small win you want to pick.', assignee: 'core-bnmit', due: inDays(2), status: 'todo', by: 'Kabir Shetty', priority: 'High' },
-  { id: 't-core-photos', to: '/uploadphotos', title: 'Shoot 5 photos at Club Orientation', text: 'Candid is better than posed. Upload them from the Upload photos page.', assignee: 'core-bnmit', due: inDays(6), status: 'todo', by: 'Kabir Shetty', priority: 'Medium' },
+  { id: 't-core-photos', title: 'Shoot 5 photos at Club Orientation', text: 'Candid is better than posed. Put them in your campus Drive folder and send the link to your Fellow.', assignee: 'core-bnmit', due: inDays(6), status: 'todo', by: 'Kabir Shetty', priority: 'Medium' },
 ];
 
 export const CONTENT_IDEAS = [
@@ -125,14 +125,14 @@ export const EVENT_CHECKLIST = {
 };
 
 export const UPDATES = [
-  { id: 'n1', title: 'The Under25 Plaque is live', text: 'Reach 3,000 followers for Silver, 10,000 for Gold and 20,000 for Purple on your club page.', tag: 'Under25', when: inDays(-1), pin: true },
-  { id: 'n2', title: 'Student talent hunt launches this month', text: 'First round in December, main stage in January. Perform, volunteer or just show up.', tag: 'Opportunity', when: inDays(-2) },
-  { id: 'n3', title: 'Bengaluru city meetup is open', text: 'Office meetup with a learning circle, a jam session and the letters wall.', tag: 'Event', when: inDays(-3) },
-  { id: 'n4', title: 'Campus Awards launch in December', text: '6 categories, 25 awards. Start collecting proof now: reports, screenshots and insights.', tag: 'Under25', when: inDays(-4) },
-  { id: 'n5', title: 'Core team applications are open', text: 'Join the Design, Content, Media, Tech, Finance, Culture, Partnerships, Marketing or Events team.', tag: 'Opportunity', when: inDays(-6) },
-  { id: 'n6', title: 'Fellow of the Week', text: 'Every week we feature a Fellow who went above and beyond. Nominate someone from the Nominate page.', tag: 'Under25', when: inDays(-8) },
-  { id: 'n7', title: 'Club Orientation next week at BNMIT', text: 'Come meet the team. First event of the semester for the newly launched club.', tag: 'Campus', when: inDays(-9) },
-  { id: 'n8', title: 'Mid-year reviews', text: 'Fellows will get a check-in call. It is a chance to ask for help, not a test.', tag: 'Under25', when: inDays(-12) },
+  { id: 'n1', title: 'The Under25 Plaque is live', text: 'Reach 3,000 followers for Silver, 10,000 for Gold and 20,000 for Purple on your club page.', tag: 'Under25', when: inDays(-1), pin: true, href: '/milestones' },
+  { id: 'n2', title: 'Student talent hunt launches this month', text: 'First round in December, main stage in January. Perform, volunteer or just show up.', tag: 'Opportunity', when: inDays(-2), href: '/talenthunt' },
+  { id: 'n3', title: 'Bengaluru city meetup is open', text: 'Office meetup with a learning circle, a jam session and the letters wall.', tag: 'Event', when: inDays(-3), href: '/events?type=City%20meetup' },
+  { id: 'n4', title: 'Campus Awards launch in December', text: '6 categories, 25 awards. Start collecting proof now: reports, screenshots and insights.', tag: 'Under25', when: inDays(-4), href: '/awards' },
+  { id: 'n5', title: 'Core team applications are open', text: 'Join the Design, Content, Media, Tech, Finance, Culture, Partnerships, Marketing or Events team.', tag: 'Opportunity', when: inDays(-6), href: '/join' },
+  { id: 'n6', title: 'Fellow of the Week', text: 'Every week we feature a Fellow who went above and beyond. Nominate someone from the Nominate page.', tag: 'Under25', when: inDays(-8), href: '/weeklyhang' },
+  { id: 'n7', title: 'Club Orientation next week at BNMIT', text: 'Come meet the team. First event of the semester for the newly launched club.', tag: 'Campus', when: inDays(-9), href: '/events' },
+  { id: 'n8', title: 'Mid-year reviews', text: 'Fellows will get a check-in call. It is a chance to ask for help, not a test.', tag: 'Under25', when: inDays(-12), href: '/tasks' },
 ];
 
 export const NOTIFICATIONS = {
@@ -254,7 +254,7 @@ EVENTS.push(
 );
 // a report already filed for e16; e15 is waiting for its report
 export const SEED_REPORTS = {
-  e16: { attendees: 142, description: 'Full house. Team introductions, a live house game and the first challenge brief. Management dropped in for ten minutes.', drive: 'https://drive.google.com/', by: 'Ananya Rao', at: inDays(-8) },
+  e16: { attendees: 142, description: 'Full house. Team introductions, a live house game and the first challenge brief. Management dropped in for ten minutes.', drive: 'https://drive.google.com/', instagram: 'https://www.instagram.com/', by: 'Ananya Rao', at: inDays(-8) },
 };
 
 export const PARTNERS = ['DSCE', 'REVA University'];
@@ -267,11 +267,11 @@ export const CAMPUS_FEED = [
   { id: 'cf6', college: 'Mithibai College', city: 'Mumbai', title: 'Talent hunt auditions', kind: 'Hosting', when: inDays(12, 15), text: 'Round 1 auditions open to everyone.' },
 ];
 export const RECENT_PHOTOS = [
-  { id: 'rp1', college: 'DSCE', title: 'Club Orientation', when: inDays(-4), art: 'shapes-yellow', tone: 'yellow' },
-  { id: 'rp2', college: 'Symbiosis', title: 'Letter writing evening', when: inDays(-6), art: 'ok-purple', tone: 'purple' },
-  { id: 'rp3', college: 'REVA University', title: 'Daan Utsav drive', when: inDays(-8), art: 'shapes-green', tone: 'green' },
-  { id: 'rp4', college: 'CBIT', title: 'Open mic night', when: inDays(-10), art: 'ok-orange', tone: 'orange' },
-  { id: 'rp5', college: 'JECRC', title: 'Silent disco walk', when: inDays(-12), art: 'trophy-yellow', tone: 'yellow' },
+  { id: 'rp1', college: 'DSCE', title: 'Club Orientation', when: inDays(-4), art: 'shapes-yellow', tone: 'yellow', instagram: 'https://www.instagram.com/' },
+  { id: 'rp2', college: 'Symbiosis', title: 'Letter writing evening', when: inDays(-6), art: 'ok-purple', tone: 'purple', instagram: 'https://www.instagram.com/' },
+  { id: 'rp3', college: 'REVA University', title: 'Daan Utsav drive', when: inDays(-8), art: 'shapes-green', tone: 'green', instagram: 'https://www.instagram.com/' },
+  { id: 'rp4', college: 'CBIT', title: 'Open mic night', when: inDays(-10), art: 'ok-orange', tone: 'orange', instagram: 'https://www.instagram.com/' },
+  { id: 'rp5', college: 'JECRC', title: 'Silent disco walk', when: inDays(-12), art: 'trophy-yellow', tone: 'yellow', instagram: 'https://www.instagram.com/' },
 ];
 
 // Banners pinned on top of Home. Event and session banners are built from real events at render time.
@@ -295,3 +295,9 @@ export const SEED_CRED = [
 export const SEED_AGREEMENTS = [
   { id: 'ag1', college: 'NMIMS', by: 'Kiara Bhat', fileName: 'NMIMS-campus-agreement.pdf', size: 480000, status: 'pending', at: inDays(-3) },
 ];
+
+// Campus Partner popups: Fellow, Head of Content and Head of Operations for the seeded partner colleges.
+export const PARTNER_LEADERS = {
+  DSCE: { fellow: { name: 'Shubh Rao', email: 'shubh.rao@example.com', handle: '@under25.dsce' }, hoc: { name: 'Ira Nambiar', email: 'ira.nambiar@example.com' }, hoo: { name: 'Yash Pillai', email: 'yash.pillai@example.com' } },
+  'REVA University': { fellow: { name: 'Roshni Das', email: 'roshni.das@example.com', handle: '@under25.reva' }, hoc: { name: 'Karan Mehta', email: 'karan.mehta@example.com' }, hoo: { name: 'Meghna Iyer', email: 'meghna.iyer@example.com' } },
+};
