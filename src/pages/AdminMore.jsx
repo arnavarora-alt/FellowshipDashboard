@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import Icon from '../components/Icon';
 import { Avatar, DataTable, Empty, Form, Modal, PageHead, SectionTitle, Stat, Tabs, Tag } from '../components/ui';
 import { CampusTag } from '../components/extra';
+import { SheetBar, mergeById, useSheet } from '../components/SheetBar';
 import { APPROVER_TEXT, canApprove, useApp } from '../store/AppState';
 import { download, fmtDate, fmtFull, relDay, toCSV } from '../lib/utils';
 import { EVENTS, PARTNERS } from '../data/mock';
@@ -64,7 +65,7 @@ const LABELS = {
 };
 const flat = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, Array.isArray(v) ? `${v.length} item(s) attached` : typeof v === 'string' && v.startsWith('data:') ? '[file attached]' : v ?? '']));
 
-export function useDatasets() {
+export function useDatasets(remote = {}) {
   const { state, everyone } = useApp();
   return useMemo(() => {
     const who = (id) => everyone.find((u) => u.id === id)?.name || id || '';
@@ -73,12 +74,14 @@ export function useDatasets() {
       'signup-request': state.signups.map((s) => ({ id: s.id, at: s.at, by: s.name, status: s.status, role: ROLE_LABEL[s.role], team: s.team, college: s.college, email: s.email, phone: s.phone, approvedBy: s.by || '' })),
     };
     state.submissions.forEach((s) => { (sets[s.type] ||= []).push({ id: s.id, at: s.at, by: who(s.userId), ...flat(s.data) }); });
+    Object.entries(remote).forEach(([type, rows]) => { sets[type] = mergeById(sets[type] || [], rows.map((r) => ({ ...r, by: r.by || r.name }))); });
     return sets;
-  }, [state, everyone]);
+  }, [state, everyone, remote]);
 }
 
 export function SubmissionsAdmin() {
-  const sets = useDatasets();
+  const sheet = useSheet();
+  const sets = useDatasets(sheet.rows);
   const types = Object.keys(sets).filter((k) => sets[k].length || ['event-listing', 'summit-request', 'insight'].includes(k));
   const [type, setType] = useState(() => (sets.help?.length ? 'help' : 'event-listing'));
   const [view, setView] = useState(null);
@@ -91,6 +94,7 @@ export function SubmissionsAdmin() {
     <>
       <PageHead title="Form submissions" sub="Everything filled in on this site lands here. Download any form as a CSV that opens in Excel." art="shapes-yellow" />
       <div className="stack">
+        <SheetBar sheet={sheet} />
         <div className="row-between">
           <select className="select" style={{ maxWidth: 340 }} value={type} onChange={(e) => setType(e.target.value)} aria-label="Form">
             {types.map((t) => <option key={t} value={t}>{LABELS[t] || t} ({sets[t]?.length || 0})</option>)}
@@ -114,8 +118,14 @@ export function SubmissionsAdmin() {
 /* ---------------- Credentials log (admin only) ---------------- */
 export function Credentials() {
   const { state } = useApp();
+  const sheet = useSheet(['credentials']);
   const [shown, setShown] = useState({});
-  const rows = state.credentials.map((c) => ({ ...c, updated: fmtDate(c.at) }));
+  const remote = (sheet.rows.credentials || []).map((c) => ({ id: `sheet-${c.userId}-${c.at}`, userId: c.userId, college: c.college, fellow: c.fellow, handle: c.handle, platform: c.platform, login: c.login, pw: c.password, at: c.at }));
+  const local = state.credentials;
+  const have = new Set(local.map((c) => c.userId));
+  const latest = {};
+  remote.forEach((c) => { if (!have.has(c.userId) && (!latest[c.userId] || c.at > latest[c.userId].at)) latest[c.userId] = c; });
+  const rows = [...local, ...Object.values(latest)].map((c) => ({ ...c, updated: fmtDate(c.at) }));
   const cols = [{ key: 'college', label: 'College' }, { key: 'fellow', label: 'Fellow' }, { key: 'handle', label: 'Page' }, { key: 'platform', label: 'Platform' }, { key: 'login', label: 'Login ID' },
     { key: 'pw', label: 'Password', render: (r) => <span className="row" style={{ gap: 8 }}><code>{shown[r.id] ? r.pw : '••••••••'}</code><button className="btn btn-icon" style={{ width: 30, height: 30 }} aria-label={shown[r.id] ? 'Hide password' : 'Show password'} onClick={() => setShown((s) => ({ ...s, [r.id]: !s[r.id] }))}><Icon name="Eye" size={14} /></button></span> },
     { key: 'updated', label: 'Updated' }];
@@ -123,6 +133,7 @@ export function Credentials() {
     <>
       <PageHead title="Credentials log" sub="Club page logins submitted by Fellows through the site. Only the Under25 admin team can open this." art="ok-orange" />
       <div className="stack">
+        <SheetBar sheet={sheet} />
         <div className="callout warn"><Icon name="TriangleAlert" /><p className="small"><b>Demo storage.</b> These live in this browser, unencrypted. A live version needs a secure backend. The CSV below opens in Excel.</p></div>
         <DataTable rows={rows} cols={cols} csv="credentials-log.csv" />
       </div>
@@ -136,15 +147,15 @@ export function Agreements() {
   const partners = [...new Set([...PARTNERS, ...state.agreements.filter((a) => a.status === 'approved').map((a) => a.college)])];
   return (
     <>
-      <PageHead title="Campus agreements" sub="Signed agreements uploaded by Fellows. Approve one and the college becomes a Campus Partner, visible to every user." art="shapes-orange" />
+      <PageHead title="Campus agreements" sub="Signed agreements shared by Fellows as Drive links. Approve one and the college becomes a Campus Partner, visible to every user." art="shapes-orange" />
       <div className="stack">
         <div className="grid g2">
           {state.agreements.map((a) => (
             <div className="card" key={a.id}>
               <div className="row-between"><h3 style={{ fontSize: 22 }}>{a.college}</h3><Tag tone={a.status === 'approved' ? 'green' : a.status === 'rejected' ? 'orange' : 'yellow'}>{a.status}</Tag></div>
-              <p className="dim small">Uploaded by {a.by} · {relDay(a.at).toLowerCase()} · {a.fileName} ({Math.round(a.size / 1024)} KB)</p>
+              <p className="dim small">Shared by {a.by} · {relDay(a.at).toLowerCase()}</p>
               <div className="row" style={{ marginTop: 12, gap: 8 }}>
-                {a.dataUrl && <a className="btn btn-sm btn-ghost" href={a.dataUrl} download={a.fileName}><Icon name="Download" size={15} /> Download</a>}
+                {a.link && <a className="btn btn-sm btn-ghost" href={a.link} target="_blank" rel="noreferrer noopener"><Icon name="ExternalLink" size={15} /> Open agreement</a>}
                 <button className="btn btn-sm" disabled={a.status === 'approved'} onClick={() => { setAgreementStatus(a.id, 'approved'); toast(`${a.college} is now a Campus Partner`); }}>Approve</button>
                 <button className="btn btn-sm btn-ghost" disabled={a.status === 'rejected'} onClick={() => setAgreementStatus(a.id, 'rejected')}>Reject</button>
               </div>
@@ -193,17 +204,22 @@ export function SpotlightAdmin() {
 /* ---------------- Drive links sheet: every Drive link in one place ---------------- */
 export function DriveLinks() {
   const { state, everyone } = useApp();
+  const sheet = useSheet(['event-report', 'summit-request']);
   const who = (id) => everyone.find((u) => u.id === id)?.name || id || '';
   const rows = useMemo(() => {
     const ev = Object.entries(state.reports).map(([id, r]) => ({ id: 'r-' + id, type: 'Event photos', college: [...EVENTS, ...state.listedEvents].find((e) => e.id === id)?.college || '', context: [...EVENTS, ...state.listedEvents].find((e) => e.id === id)?.title || id, link: r.drive, by: r.by, at: r.at }));
     const sm = state.submissions.filter((s) => s.type === 'summit-request' && s.data.drive).map((s) => ({ id: s.id, type: 'Summit auditorium photos', college: s.data.college, context: 'Summit at Campus slot request', link: s.data.drive, by: who(s.userId), at: s.at }));
-    return [...ev, ...sm].sort((a, b) => new Date(b.at) - new Date(a.at));
-  }, [state, everyone]);
+    const rr = (sheet.rows['event-report'] || []).filter((r) => r.drive).map((r) => ({ id: `r-${r.id}`, type: 'Event photos', college: r.college, context: r.event, link: r.drive, by: r.name || r.by, at: r.at }));
+    const rs = (sheet.rows['summit-request'] || []).filter((r) => r.drive).map((r) => ({ id: r.id, type: 'Summit auditorium photos', college: r.college, context: 'Summit at Campus slot request', link: r.drive, by: r.name, at: r.at }));
+    const sub = new Set([...sm, ...ev].map((r) => r.link + r.college));
+    return [...ev, ...sm, ...[...rr, ...rs].filter((r) => !sub.has(r.link + r.college))].sort((a, b) => new Date(b.at) - new Date(a.at));
+  }, [state, everyone, sheet.rows]);
   const cols = [{ key: 'type', label: 'Type' }, { key: 'college', label: 'College' }, { key: 'context', label: 'Event or request' }, { key: 'link', label: 'Drive link', render: (r) => <a className="link" href={r.link} target="_blank" rel="noreferrer noopener">Open</a> }, { key: 'by', label: 'Shared by' }, { key: 'at', label: 'Date', render: (r) => fmtDate(r.at) }];
   return (
     <>
       <PageHead title="Drive links sheet" sub="Every Drive link shared on the site, in one sheet: event photos from executed-event reports and auditorium photos from Summit requests." art="shapes-green" />
       <div className="stack">
+        <SheetBar sheet={sheet} />
         <div className="callout"><Icon name="Link2" /><p className="small">Photos are not stored on the dashboard. Teams share Drive links instead, plus one small JPG cover photo per event for Home.</p></div>
         <DataTable rows={rows} cols={cols} csv="drive-links.csv" empty="No Drive links yet. They appear when an event is marked executed." />
       </div>
@@ -214,10 +230,13 @@ export function DriveLinks() {
 /* ---------------- Care requests: what people send from "Need help?" ---------------- */
 export function CareRequests() {
   const { state, everyone, flag, toggle } = useApp();
-  const rows = state.submissions.filter((s) => s.type === 'help').map((s) => {
+  const sheet = useSheet(['help']);
+  const local = state.submissions.filter((s) => s.type === 'help').map((s) => {
     const u = everyone.find((x) => x.id === s.userId);
-    return { id: s.id, at: s.at, from: u?.name || s.userId || 'Unknown', role: u?.role ? ROLE_LABEL[u.role] || u.role : '', college: u?.college || '', email: u?.email || '', topic: s.data.topic, message: s.data.text, status: flag(`care:${s.id}`) ? 'Resolved' : 'Open' };
+    return { id: s.id, at: s.at, from: u?.name || s.userId || 'Unknown', role: u?.role ? ROLE_LABEL[u.role] || u.role : '', college: u?.college || '', email: u?.email || '', topic: s.data.topic, message: s.data.text };
   });
+  const remote = (sheet.rows.help || []).map((r) => ({ id: r.id, at: r.at, from: r.name || r.userId || 'Unknown', role: ROLE_LABEL[r.role] || r.role || '', college: r.college || '', email: r.email || '', topic: r.topic, message: r.text }));
+  const rows = mergeById(local, remote).sort((a, b) => new Date(b.at) - new Date(a.at)).map((r) => ({ ...r, status: flag(`care:${r.id}`) ? 'Resolved' : 'Open' }));
   const open = rows.filter((r) => r.status === 'Open').length;
   const cols = [
     { key: 'at', label: 'Sent', render: (r) => fmtFull(r.at) }, { key: 'from', label: 'From' }, { key: 'role', label: 'Role' }, { key: 'college', label: 'College' }, { key: 'email', label: 'Email' },
@@ -228,8 +247,8 @@ export function CareRequests() {
     <>
       <PageHead title="Care requests" sub="Everything people send from Need help? to the Under25 Care team." art="ok-purple" />
       <div className="stack">
+        <SheetBar sheet={sheet} />
         <div className="card"><div className="grid g3"><Stat label="Open" value={open} /><Stat label="Resolved" value={rows.length - open} /><Stat label="Total" value={rows.length} /></div></div>
-        <div className="callout warn"><Icon name="Info" /><p className="small"><b>This prototype has no shared backend.</b> Requests are stored in the browser they were sent from, so you only see requests sent from this same browser. A live version needs a database or a form-to-sheet connection.</p></div>
         <DataTable rows={rows} cols={cols} csv="care-requests.csv" empty="No requests yet. They appear when someone sends a note from Need help?" />
       </div>
     </>

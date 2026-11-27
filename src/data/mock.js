@@ -293,7 +293,7 @@ export const SEED_CRED = [
   { id: 'k3', college: 'Symbiosis', fellow: 'Tanvi Kulkarni', handle: '@under25.symbi', platform: 'Instagram', login: 'symbi.under25@example.com', pw: 'demo-pass-3', at: inDays(-14) },
 ];
 export const SEED_AGREEMENTS = [
-  { id: 'ag1', college: 'NMIMS', by: 'Kiara Bhat', fileName: 'NMIMS-campus-agreement.pdf', size: 480000, status: 'pending', at: inDays(-3) },
+  { id: 'ag1', college: 'NMIMS', by: 'Kiara Bhat', link: 'https://drive.google.com/', status: 'pending', at: inDays(-3) },
 ];
 
 // Campus Partner popups: Fellow, Head of Content and Head of Operations for the seeded partner colleges.

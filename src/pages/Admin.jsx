@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { CampusTag } from '../components/extra';
+import { SheetBar, mergeById, useSheet } from '../components/SheetBar';
 import { useSearchParams } from 'react-router-dom';
 import Icon from '../components/Icon';
 import { Avatar, Bars, Chips, DataTable, Empty, ExtLink, Form, Modal, PageHead, Progress, SearchBox, SectionTitle, Stat, Tabs, Tag, Tilt } from '../components/ui';
@@ -81,20 +82,26 @@ export function AdminEvents() {
   const { state, setEventStatus, addEventAssign, toast, flag } = useApp();
   const [tab, setTab] = useState('listings');
   const [view, setView] = useState(null);
+  const sheet = useSheet(['event-listing', 'event-report']);
   const rows = [...state.listedEvents.filter((e) => e.status === 'Approved'), ...EVENTS].map((e) => ({ ...e, rsvp: (e.going || 0) + (flag(`rsvp:${e.id}`) ? 1 : 0), when: e.when }));
-  const listings = state.listedEvents.map((e) => ({ id: e.id, title: e.title, college: e.college, city: e.city, state: e.form?.state, date: e.when, venue: e.where, cap: e.cap, ticketing: e.form?.ticketing, status: e.status, by: e.form?.name, whatsapp: e.form?.whatsapp, kind: e.form?.kind, description: e.text, poster: e.form?.poster, price: e.form?.price }));
+  const remoteListings = (sheet.rows['event-listing'] || []).map((r) => ({ id: r.id, title: r.title, college: r.college, city: r.city, state: r.state, date: r.date && r.start ? `${r.date}T${r.start}` : r.at, venue: r.venue, cap: r.cap, ticketing: r.ticketing, status: r.status, by: r.name, whatsapp: r.whatsapp, kind: r.kind, description: r.text, poster: r.poster, price: r.price, remoteOnly: true }));
+  const localListings = state.listedEvents.map((e) => ({ id: e.id, title: e.title, college: e.college, city: e.city, state: e.form?.state, date: e.when, venue: e.where, cap: e.cap, ticketing: e.form?.ticketing, status: e.status, by: e.form?.name, whatsapp: e.form?.whatsapp, kind: e.form?.kind, description: e.text, poster: e.form?.poster, price: e.form?.price }));
+  const listings = mergeById(localListings, remoteListings);
   const listCols = [{ key: 'title', label: 'Event' }, { key: 'college', label: 'College' }, { key: 'city', label: 'City' }, { key: 'state', label: 'State' }, { key: 'kind', label: 'Type' }, { key: 'date', label: 'When', render: (r) => fmtFull(r.date) }, { key: 'venue', label: 'Venue' }, { key: 'cap', label: 'Expected' }, { key: 'ticketing', label: 'Tickets' }, { key: 'price', label: 'Price (₹)' }, { key: 'by', label: 'Submitted by' }, { key: 'whatsapp', label: 'WhatsApp' }, { key: 'poster', label: 'Poster link' }, { key: 'description', label: 'Description' }, { key: 'status', label: 'Status', render: (r) => <Tag tone={r.status === 'Approved' ? 'green' : r.status === 'Rejected' ? 'orange' : 'yellow'}>{r.status}</Tag> }];
-  const reports = Object.entries(state.reports).map(([id, r]) => { const e = [...EVENTS, ...state.listedEvents].find((x) => x.id === id); return { id, event: e?.title || id, college: e?.college || '', date: e?.when || r.at, attendees: r.attendees, description: r.description, drive: r.drive, by: r.by, filed: r.at }; });
+  const remoteReports = (sheet.rows['event-report'] || []).map((r) => ({ id: `sheet-${r.id}`, event: r.event, college: r.college, date: r.date || r.at, attendees: r.attendees, description: r.description, drive: r.drive, by: r.by || r.name, filed: r.at }));
+  const localReports = Object.entries(state.reports).map(([id, r]) => { const e = [...EVENTS, ...state.listedEvents].find((x) => x.id === id); return { id, event: e?.title || id, college: e?.college || '', date: e?.when || r.at, attendees: r.attendees, description: r.description, drive: r.drive, by: r.by, filed: r.at }; });
+  const reports = [...localReports, ...remoteReports.filter((r) => !localReports.some((l) => l.event === r.event && l.college === r.college))];
   const cur = state.listedEvents.find((e) => e.id === view);
   return (
     <>
       <PageHead title="Events and RSVPs" sub="Event listings from the in-site form, executed-event reports and RSVP counts. Everything downloads as CSV." art="ok-orange" />
       <div className="stack">
+        <SheetBar sheet={sheet} />
         <Tabs value={tab} onChange={setTab} tabs={[{ id: 'listings', label: `Event listings (${state.listedEvents.length})` }, { id: 'reports', label: `Executed reports (${reports.length})` }, { id: 'all', label: 'All events and RSVPs' }, { id: 'assign', label: 'Assign event' }]} />
         {tab === 'listings' && (
           listings.length ? (
             <>
-              <DataTable rows={listings} csv="event-listings.csv" cols={[...listCols, { key: 'id', label: '', noCsv: true, render: (r) => <button className="btn btn-sm btn-ghost" onClick={() => setView(r.id)}>Review</button> }]} />
+              <DataTable rows={listings} csv="event-listings.csv" cols={[...listCols, { key: 'id', label: '', noCsv: true, render: (r) => (r.remoteOnly ? <span className="tiny dim">In the sheet</span> : <button className="btn btn-sm btn-ghost" onClick={() => setView(r.id)}>Review</button>) }]} />
             </>
           ) : <Empty title="No colleges have listed events yet" text="Events submitted through the listing form show up here for review." />
         )}

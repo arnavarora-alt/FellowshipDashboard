@@ -11,3 +11,8 @@ export const instagramUrl = (handle) => {
   if (/^https?:/i.test(handle)) return handle;
   return `https://www.instagram.com/${String(handle).replace(/^@/, '').replace(/\/$/, '')}/`;
 };
+
+// Google Sheet backend (see backend/README.md). Set at build time with VITE_SHEET_URL and VITE_SHEET_TOKEN,
+// or paste the web app URL here. Empty means forms stay in the browser only.
+export const SHEET_URL = import.meta.env?.VITE_SHEET_URL || '';
+export const SHEET_TOKEN = import.meta.env?.VITE_SHEET_TOKEN || '';

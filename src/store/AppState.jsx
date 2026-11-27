@@ -3,6 +3,7 @@ import { USERS } from '../data/roles';
 import { APPROVER_TEXT, canApprove } from '../lib/approvals';
 import { TASKS, APPLICATIONS, EVENTS, SEED_SIGNUPS, SEED_REPORTS, SEED_AGREEMENTS, SEED_CRED, SPOTLIGHT_SEED, PARTNERS, PARTNER_LEADERS, PEOPLE } from '../data/mock';
 import { instagramUrl } from '../data/links';
+import { flushQueue, pushRow } from '../lib/sheet';
 
 const KEY = 'u25.dashboard.v2';
 const fresh = () => ({
@@ -62,10 +63,18 @@ export function AppProvider({ children }) {
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3200);
   }, []);
 
+  useEffect(() => {
+    flushQueue();
+    const t = setInterval(flushQueue, 60000);
+    return () => clearInterval(t);
+  }, []);
+
   const everyone = useMemo(() => [...USERS, ...state.accounts], [state.accounts]);
   const user = useMemo(() => everyone.find((u) => u.id === state.userId) || null, [everyone, state.userId]);
 
   const api = useMemo(() => {
+    const who = () => ({ userId: user?.id, name: user?.name, role: user?.role, college: user?.college, email: user?.email });
+    const stamp = () => new Date().toISOString();
     const mail = (s, to, subject, body) => ({ ...s, outbox: [{ id: `m${Date.now()}${Math.random().toString(36).slice(2, 5)}`, to, subject, body, at: new Date().toISOString() }, ...s.outbox] });
     const makeAccount = (s, req) => {
       const base = `${PREFIX[req.role]}-${slug(req.college)}`;
@@ -99,7 +108,10 @@ export function AppProvider({ children }) {
       toggle: (k) => setState((s) => ({ ...s, flags: { ...s.flags, [k]: !s.flags[k] } })),
       count: (prefix) => Object.keys(state.flags).filter((k) => k.startsWith(prefix) && state.flags[k]).length,
       submit(type, data, msg) {
-        setState((s) => ({ ...s, submissions: [{ id: `s${Date.now()}`, type, userId: s.userId, data, at: new Date().toISOString() }, ...s.submissions] }));
+        const id = `s${Date.now()}`;
+        const at = stamp();
+        pushRow(type, { id, at, ...who(), ...data });
+        setState((s) => ({ ...s, submissions: [{ id, type, userId: s.userId, data, at }, ...s.submissions] }));
         toast(msg || 'Sent. Thank you!');
       },
 
@@ -110,6 +122,7 @@ export function AppProvider({ children }) {
           return { ok: false, error: 'That email already has an account or a request waiting for approval.' };
         }
         const entry = { id: `su${Date.now()}`, ...req, email, status: 'pending', at: new Date().toISOString() };
+        pushRow('signup-request', { id: entry.id, at: entry.at, name: req.name, college: req.college, email, phone: req.phone, role: req.role, team: req.team, status: req.role === 'community' ? 'auto-approved' : 'pending' });
         if (req.role === 'community') {
           let acct;
           setState((s) => {
@@ -123,6 +136,7 @@ export function AppProvider({ children }) {
         return { ok: true, instant: false, email };
       },
       approveSignup(id, by) {
+        { const r = state.signups.find((x) => x.id === id); if (r) pushRow('signup-decision', { id, at: stamp(), decision: 'approved', by, name: r.name, email: r.email, role: r.role, college: r.college }); }
         setState((s) => {
           const req = s.signups.find((x) => x.id === id);
           if (!req || req.status !== 'pending') return s;
@@ -133,6 +147,7 @@ export function AppProvider({ children }) {
         toast('Approved. ID and password emailed.');
       },
       rejectSignup(id, by) {
+        { const r = state.signups.find((x) => x.id === id); if (r) pushRow('signup-decision', { id, at: stamp(), decision: 'declined', by, name: r.name, email: r.email, role: r.role, college: r.college }); }
         setState((s) => {
           const req = s.signups.find((x) => x.id === id);
           if (!req) return s;
@@ -145,24 +160,24 @@ export function AppProvider({ children }) {
       /* ----- tasks, events, reports ----- */
       addTask: (t) => setState((s) => ({ ...s, tasks: [{ ...t, id: `t${Date.now()}`, status: 'todo' }, ...s.tasks] })),
       setTaskStatus: (id, status) => setState((s) => ({ ...s, tasks: s.tasks.map((t) => (t.id === id ? { ...t, status } : t)) })),
-      addListedEvent: (form, ownerId) => setState((s) => ({
+      addListedEvent: (form, ownerId) => { const id = `le${Date.now()}`; pushRow('event-listing', { id, at: stamp(), status: 'Pending review', ...who(), ...form }); return setState((s) => ({
         ...s,
         listedEvents: [{
-          id: `le${Date.now()}`, title: form.title, type: 'On-ground', when: new Date(`${form.date}T${form.start || '15:00'}`).toISOString(), where: form.venue,
+          id, title: form.title, type: 'On-ground', when: new Date(`${form.date}T${form.start || '15:00'}`).toISOString(), where: form.venue,
           city: form.city, college: form.college, cap: Number(form.cap) || 100, going: 0, leaders: false, text: form.text, status: 'Pending review', ownerId, form, at: new Date().toISOString(),
         }, ...s.listedEvents],
-      })),
-      setEventStatus: (id, status) => setState((s) => ({ ...s, listedEvents: s.listedEvents.map((e) => (e.id === id ? { ...e, status } : e)) })),
+      })); },
+      setEventStatus: (id, status) => { pushRow('event-decision', { id, at: stamp(), status, by: user?.name, title: state.listedEvents.find((e) => e.id === id)?.title }); return setState((s) => ({ ...s, listedEvents: s.listedEvents.map((e) => (e.id === id ? { ...e, status } : e)) })); },
       saveReport: (eventId, report) => setState((s) => ({ ...s, reports: { ...s.reports, [eventId]: report } })),
-      setApplication: (id, patch) => setState((s) => ({ ...s, applications: s.applications.map((a) => (a.id === id ? { ...a, ...patch } : a)) })),
+      setApplication: (id, patch) => { pushRow('application-decision', { id, at: stamp(), by: user?.name, ...patch, name: state.applications.find((a) => a.id === id)?.name }); return setState((s) => ({ ...s, applications: s.applications.map((a) => (a.id === id ? { ...a, ...patch } : a)) })); },
       addCall: (c) => setState((s) => ({ ...s, calls: [{ ...c, id: `c${Date.now()}` }, ...s.calls] })),
       removeCall: (id) => setState((s) => ({ ...s, calls: s.calls.filter((c) => c.id !== id) })),
       addEventAssign: (a) => setState((s) => ({ ...s, eventAssign: [{ ...a, id: `ea${Date.now()}` }, ...s.eventAssign] })),
 
       /* ----- credentials, agreements, photos, spotlight ----- */
-      saveCredential: (c) => setState((s) => ({ ...s, handles: { ...s.handles, [c.college]: c.handle }, credentials: [{ ...c, id: `k${Date.now()}`, at: new Date().toISOString() }, ...s.credentials.filter((x) => x.userId !== c.userId)] })),
-      submitAgreement: (a) => setState((s) => ({ ...s, agreements: [{ ...a, id: `ag${Date.now()}`, status: 'pending', at: new Date().toISOString() }, ...s.agreements.filter((x) => x.college !== a.college)] })),
-      setAgreementStatus: (id, status) => setState((s) => ({ ...s, agreements: s.agreements.map((a) => (a.id === id ? { ...a, status } : a)) })),
+      saveCredential: (c) => { pushRow('credentials', { at: stamp(), userId: c.userId, fellow: c.fellow, college: c.college, handle: c.handle, platform: c.platform, login: c.login, password: c.pw }); return setState((s) => ({ ...s, handles: { ...s.handles, [c.college]: c.handle }, credentials: [{ ...c, id: `k${Date.now()}`, at: new Date().toISOString() }, ...s.credentials.filter((x) => x.userId !== c.userId)] })); },
+      submitAgreement: (a) => { pushRow('campus-agreement', { at: stamp(), college: a.college, submittedBy: a.by, driveLink: a.link, status: 'pending' }); return setState((s) => ({ ...s, agreements: [{ ...a, id: `ag${Date.now()}`, status: 'pending', at: new Date().toISOString() }, ...s.agreements.filter((x) => x.college !== a.college)] })); },
+      setAgreementStatus: (id, status) => { pushRow('agreement-decision', { id, at: stamp(), status, by: user?.name, college: state.agreements.find((a) => a.id === id)?.college }); return setState((s) => ({ ...s, agreements: s.agreements.map((a) => (a.id === id ? { ...a, status } : a)) })); },
       instagramFor: (college) => instagramUrl(state.handles[college] || PARTNER_LEADERS[college]?.fellow?.handle),
       leadersOf(college) {
         const find = (role, label) => {

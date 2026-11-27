@@ -26,6 +26,9 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
+        env:
+          VITE_SHEET_URL: ${{ vars.SHEET_URL }}
+          VITE_SHEET_TOKEN: ${{ vars.SHEET_TOKEN }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

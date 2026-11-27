@@ -16,7 +16,8 @@ npm install
 npm run dev            # http://localhost:5173
 npm run build          # deployable site in dist/
 npm run build:single   # one-file build in dist-single/index.html
-npm test               # verifies roles, approvals, first-login briefings and the colour palette
+npm test               # verifies roles, approvals, briefings, the colour palette and the sheet backend
+npm run mock-sheet     # fake Google Sheet backend for trying it without a Google account
 ```
 
 Hash routing and relative asset paths, so `dist/` works on GitHub Pages, Netlify, Vercel or any static host. A GitHub Actions
@@ -86,12 +87,19 @@ open Instagram, and a coloured, clickable What's new.
 - **List an event** is an in-site form (page 1 mirrors the Under25 Google Form). Admin reviews it under *Events and RSVPs*; approving
   makes it live. Every form on the site shows under *Form submissions* with a CSV download (opens in Excel).
 - Other in-site forms: Summit slot request (with a Drive link to auditorium photos), club page login (Fellow task, admin-only log), Campus Agreement
-  upload, monthly insight form (a mandatory task on the 25th for Fellows and Heads of Operations), successor nomination, Campus
+  (Drive link), monthly insight form (a mandatory task on the 25th for Fellows and Heads of Operations), successor nomination, Campus
   Awards nomination (opens in March).
 - **Campus Agreement.** A Fellow uploads the signed agreement; on admin approval the college gets a **Campus Partner** tag shown to
   everyone, and the Fellow unlocks *Campus Partner next steps* (content to be announced).
 
 Form definitions live in `src/data/forms.js`.
+
+## Google Sheet backend
+
+Forms can be saved to a Google Sheet so admins receive them from every browser: Need help? notes, event listings and reports,
+summit requests, insight forms, nominations, sign-up requests, club page logins and Campus Agreement links. Setup takes about 10 minutes and is
+in [`backend/README.md`](backend/README.md). Until it is connected, forms stay in the browser they were sent from.
+Approvals, accounts, RSVPs and tasks are still per browser (details in that README).
 
 ## Access rules
 
@@ -117,5 +125,6 @@ src/store/       app state + localStorage persistence
 src/lib/         approvals, tasks, image helpers
 src/components/  shell, command palette, Spotlight, UI kit (tilt cards, forms, tables, charts)
 src/pages/       Login, Signup, RoleIntro, Home and one module per area
-scripts/verify.mjs   access, approvals and palette checks (npm test)
+backend/Code.gs      Google Apps Script that writes forms to a sheet
+scripts/             verify.mjs (access, approvals, palette), test-sheet.mjs, mock sheet server
 ```

@@ -8,7 +8,6 @@ import { useApp, allEvents } from '../store/AppState';
 import { AWARDS, AWARD_STEPS, DRILLS, NOTION_HUB } from '../data/content';
 import { CLUB_AWARD_FORM, CRED_FORM, SUMMIT_FORM } from '../data/forms';
 import { EVENTS } from '../data/mock';
-import { readFileData } from '../lib/image';
 import { fmtDate, fmtFull, relDay } from '../lib/utils';
 import playbookPdf from '../assets/playbook.pdf?url';
 import { ART } from '../lib/assets';
@@ -310,17 +309,14 @@ export function CampusAgreement() {
   const { user, state, submitAgreement, toast, isPartner } = useApp();
   const mine = state.agreements.find((a) => a.college === user.college);
   const partner = isPartner(user.college);
-  const [file, setFile] = useState(null);
+  const [link, setLink] = useState('');
   const [err, setErr] = useState('');
   const step = partner ? 3 : mine?.status === 'pending' ? 2 : 1;
-  const upload = async () => {
-    if (!file) { setErr('Choose the signed agreement first (PDF or photo).'); return; }
-    try {
-      const dataUrl = await readFileData(file);
-      submitAgreement({ college: user.college, by: user.name, fileName: file.name, size: file.size, dataUrl });
-      toast('Uploaded. Under25 will review your Campus Agreement.');
-      setFile(null); setErr('');
-    } catch (e) { setErr(e.message); }
+  const upload = () => {
+    if (!/^https?:\/\/\S+\.\S+/.test(link.trim())) { setErr('Paste the Drive link to the signed agreement (it starts with https://).'); return; }
+    submitAgreement({ college: user.college, by: user.name, link: link.trim() });
+    toast('Sent. Under25 will review your Campus Agreement.');
+    setLink(''); setErr('');
   };
   return (
     <>
@@ -328,7 +324,7 @@ export function CampusAgreement() {
       <div className="stack">
         <div className="card">
           <div className="timeline">
-            {[['Get it signed', 'Management signs the Campus Agreement.'], ['Upload the signed copy', 'PDF or a clear photo, under 900 KB.'], ['Under25 approves', 'Your college gets the Campus Partner title.']].map(([t, d], i) => (
+            {[['Get it signed', 'Management signs the Campus Agreement.'], ['Share the signed copy', 'Put the PDF or a clear photo in Drive and paste the link.'], ['Under25 approves', 'Your college gets the Campus Partner title.']].map(([t, d], i) => (
               <div key={t} className={`tl-item ${i + 1 < step ? 'done' : i + 1 === step ? 'now' : ''}`}><span className="tl-dot">{i + 1 < step && <Icon name="Check" size={12} strokeWidth={3.5} />}</span><b>{t}</b><p className="dim small">{d}</p></div>
             ))}
           </div>
@@ -336,12 +332,12 @@ export function CampusAgreement() {
         {partner ? (
           <div className="callout"><Icon name="BadgeCheck" /><div className="grow"><b>{user.college} is a Campus Partner.</b><p className="small">The tag now shows next to your college name for everyone. Your next steps are unlocked.</p></div><Link className="btn" to="/partnernext">See next steps</Link></div>
         ) : mine?.status === 'pending' ? (
-          <div className="callout"><Icon name="Clock" /><div><b>Waiting for approval.</b><p className="small">{mine.fileName} uploaded {relDay(mine.at).toLowerCase()}. Under25 will review it.</p></div></div>
+          <div className="callout"><Icon name="Clock" /><div><b>Waiting for approval.</b><p className="small">Link shared {relDay(mine.at).toLowerCase()}. Under25 will review it.</p></div></div>
         ) : (
           <div className="card stack">
-            {mine?.status === 'rejected' && <div className="callout warn"><Icon name="TriangleAlert" /><p className="small"><b>The last upload was not approved.</b> Upload a clearer signed copy.</p></div>}
-            <div className="field"><label htmlFor="ag">Signed Campus Agreement</label><input id="ag" className="input" type="file" accept=".pdf,image/*" onChange={(e) => { setFile(e.target.files?.[0] || null); setErr(''); }} />{err && <span className="err" role="alert">{err}</span>}</div>
-            <div><button className="btn" onClick={upload}>Upload for approval</button></div>
+            {mine?.status === 'rejected' && <div className="callout warn"><Icon name="TriangleAlert" /><p className="small"><b>The last copy was not approved.</b> Share a clearer signed copy.</p></div>}
+            <div className="field"><label htmlFor="ag">Drive link to the signed Campus Agreement</label><input id="ag" className="input" type="url" placeholder="https://drive.google.com/…" value={link} onChange={(e) => { setLink(e.target.value); setErr(''); }} />{err && <span className="err" role="alert">{err}</span>}</div>
+            <div><button className="btn" onClick={upload}>Send for approval</button></div>
           </div>
         )}
       </div>
