@@ -81,6 +81,7 @@ const rows = [
   ['applications', '/applications', 'Fellowship applications', 'UserCheck', 'admin', '', 'Accept, reject, interview'],
   ['adminevents', '/adminevents', 'Events and RSVPs', 'CalendarCheck', 'admin', '', 'Event listings, executed reports, RSVPs, CSV'],
   ['submissions', '/submissions', 'Form submissions', 'Inbox', 'admin', '', 'Every form filled on the site, with CSV'],
+  ['care', '/care', 'Care requests', 'LifeBuoy', 'admin', '', 'Questions sent to Under25 Care from Need help?'],
   ['drivelinks', '/drivelinks', 'Drive links sheet', 'Link2', 'admin', '', 'Every event and summit Drive link in one sheet'],
   ['credentials', '/credentials', 'Credentials log', 'KeyRound', 'admin', '', 'Club page logins from every Fellow'],
   ['agreements', '/agreements', 'Campus agreements', 'FileSignature', 'admin', '', 'Approve signed agreements, grant Campus Partner'],

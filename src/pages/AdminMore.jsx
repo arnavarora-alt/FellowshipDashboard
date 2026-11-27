@@ -80,7 +80,7 @@ export function useDatasets() {
 export function SubmissionsAdmin() {
   const sets = useDatasets();
   const types = Object.keys(sets).filter((k) => sets[k].length || ['event-listing', 'summit-request', 'insight'].includes(k));
-  const [type, setType] = useState('event-listing');
+  const [type, setType] = useState(() => (sets.help?.length ? 'help' : 'event-listing'));
   const [view, setView] = useState(null);
   const { state } = useApp();
   const rows = sets[type] || [];
@@ -206,6 +206,31 @@ export function DriveLinks() {
       <div className="stack">
         <div className="callout"><Icon name="Link2" /><p className="small">Photos are not stored on the dashboard. Teams share Drive links instead, plus one small JPG cover photo per event for Home.</p></div>
         <DataTable rows={rows} cols={cols} csv="drive-links.csv" empty="No Drive links yet. They appear when an event is marked executed." />
+      </div>
+    </>
+  );
+}
+
+/* ---------------- Care requests: what people send from "Need help?" ---------------- */
+export function CareRequests() {
+  const { state, everyone, flag, toggle } = useApp();
+  const rows = state.submissions.filter((s) => s.type === 'help').map((s) => {
+    const u = everyone.find((x) => x.id === s.userId);
+    return { id: s.id, at: s.at, from: u?.name || s.userId || 'Unknown', role: u?.role ? ROLE_LABEL[u.role] || u.role : '', college: u?.college || '', email: u?.email || '', topic: s.data.topic, message: s.data.text, status: flag(`care:${s.id}`) ? 'Resolved' : 'Open' };
+  });
+  const open = rows.filter((r) => r.status === 'Open').length;
+  const cols = [
+    { key: 'at', label: 'Sent', render: (r) => fmtFull(r.at) }, { key: 'from', label: 'From' }, { key: 'role', label: 'Role' }, { key: 'college', label: 'College' }, { key: 'email', label: 'Email' },
+    { key: 'topic', label: 'Topic' }, { key: 'message', label: 'Message', render: (r) => <span style={{ maxWidth: 340, display: 'inline-block' }}>{r.message}</span> },
+    { key: 'status', label: 'Status', render: (r) => <button className={`btn btn-sm ${r.status === 'Resolved' ? 'btn-soft' : ''}`} onClick={() => toggle(`care:${r.id}`)} aria-pressed={r.status === 'Resolved'}>{r.status === 'Resolved' ? 'Resolved' : 'Mark resolved'}</button> },
+  ];
+  return (
+    <>
+      <PageHead title="Care requests" sub="Everything people send from Need help? to the Under25 Care team." art="ok-purple" />
+      <div className="stack">
+        <div className="card"><div className="grid g3"><Stat label="Open" value={open} /><Stat label="Resolved" value={rows.length - open} /><Stat label="Total" value={rows.length} /></div></div>
+        <div className="callout warn"><Icon name="Info" /><p className="small"><b>This prototype has no shared backend.</b> Requests are stored in the browser they were sent from, so you only see requests sent from this same browser. A live version needs a database or a form-to-sheet connection.</p></div>
+        <DataTable rows={rows} cols={cols} csv="care-requests.csv" empty="No requests yet. They appear when someone sends a note from Need help?" />
       </div>
     </>
   );

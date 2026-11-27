@@ -17,7 +17,7 @@ for (const k of ['journey', 'help', 'team', 'branded', 'challenges']) {
 // Assign task: Fellow, HoC, HoO (and admin)
 ok(['fellow', 'hoc', 'hoo', 'admin'].every((r) => canAccess(r, 'assigntask')) && !canAccess('core', 'assigntask') && !canAccess('community', 'assigntask'), 'assigntask: fellow, hoc, hoo, admin only');
 ok(FEATURES.every((f) => f.roles.includes('admin')), 'admin can access every feature');
-for (const k of ['database', 'applications', 'adminevents', 'submissions', 'credentials', 'drivelinks', 'agreements', 'spotlightadmin', 'leadership', 'calls', 'health', 'analytics', 'programcal', 'docs']) {
+for (const k of ['database', 'applications', 'adminevents', 'submissions', 'credentials', 'drivelinks', 'care', 'agreements', 'spotlightadmin', 'leadership', 'calls', 'health', 'analytics', 'programcal', 'docs']) {
   ok(FEATURES.find((f) => f.key === k).roles.join() === 'admin', `${k}: admin only`);
 }
 // Tabs that were removed

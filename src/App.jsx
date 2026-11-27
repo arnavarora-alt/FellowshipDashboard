@@ -13,7 +13,7 @@ import { Team, Structure, Journey, Milestones, Challenges, Branded, Help } from 
 import { ClubPage, Hygiene, ContentIdeas, ContentCal, ClubResources, ContentGuide, DraftRoom, WeeklyHang } from './pages/Club';
 import { EventStats, EventIdeas, EventCal } from './pages/Ops';
 import { Playbook, Drills, Awards, Summit, CollegeStatus, Recruitment, CredForm, CampusAgreement, PartnerNext } from './pages/Fellow';
-import { Approvals, SubmissionsAdmin, DriveLinks, Credentials, Agreements, SpotlightAdmin } from './pages/AdminMore';
+import { Approvals, SubmissionsAdmin, DriveLinks, CareRequests, Credentials, Agreements, SpotlightAdmin } from './pages/AdminMore';
 import Signup, { Mailbox } from './pages/Signup';
 import { Database, Applications, AdminEvents, Leadership, Calls, Health, Analytics, ProgramCal, Docs } from './pages/Admin';
 
@@ -27,7 +27,7 @@ const PAGES = {
   insight: Insight, nominate: Nominate, alumni: Alumni,
   playbook: Playbook, drills: Drills, weeklyhang: WeeklyHang, qna: QnA,
   join: Join, involve: Involve, talenthunt: TalentHunt, suggestions: Suggestions, certificates: Certificates, help: Help,
-  database: Database, applications: Applications, adminevents: AdminEvents, submissions: SubmissionsAdmin, drivelinks: DriveLinks, credentials: Credentials,
+  database: Database, applications: Applications, adminevents: AdminEvents, submissions: SubmissionsAdmin, drivelinks: DriveLinks, care: CareRequests, credentials: Credentials,
   agreements: Agreements, spotlightadmin: SpotlightAdmin, leadership: Leadership, calls: Calls,
   health: Health, analytics: Analytics, programcal: ProgramCal, docs: Docs,
 };
